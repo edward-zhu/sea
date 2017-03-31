@@ -3,5 +3,6 @@
 *.out
 .venv
 .vscode
+playground
 *.pkl
 *.in

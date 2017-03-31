@@ -22,6 +22,7 @@ def parse(url, n_part, job_path):
     parser = WikipediaParser()
     ud = urlopen(url)
     bd = bz2.open(ud)
+    print('parse url ', url)
     ret = parser.parse(bd)
     ud.close()
     bd.close()
@@ -33,7 +34,7 @@ def parse(url, n_part, job_path):
         files.append(open(fn, "w"))
 
     count = 0
-    for doc, md in chain(*ret):
+    for doc, md in chain(ret):
         md["doc_id"] = count
         pid = md["doc_id"] % n_part
         files[pid].write(json.dumps({
@@ -70,8 +71,7 @@ class Reformatter:
 
 
 URLS = [
-    "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles1.xml-p000000010p000030302.bz2",
-    "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles2.xml-p000030304p000088444.bz2",
+    "http://localhost:8000/info_ret.xml.bz2"
 ]
 
 @coroutine
@@ -79,7 +79,7 @@ def main():
     '''main func'''
     r = Reformatter(URLS, "data/invindex_jobs", 4)
     ok, err = yield r.run()
-
+    print(err)
     IOLoop.instance().stop()
 
 if __name__ == "__main__":
