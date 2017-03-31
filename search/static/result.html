@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Misaki Search</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.7/semantic.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.7/semantic.min.js"></script>
+  <style type="text/css" media="screen">
+    .container {
+      margin-left: 1em;
+      margin-right: 1em;
+    }
+    .search-results-header {
+      margin-top: 1em;
+    }
+    #search-header {
+      padding-bottom: 0.1em;
+    }
+
+    #search-header a {
+      color: #000;
+    }
+
+    #result {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    #result .ui.header {
+      margin-bottom: 0.4rem;
+    }
+
+    .ui.divider {
+      margin-top: 0.1rem;
+      margin-bottom: 0rem;
+    }
+
+    .container {
+      width: 852px;
+    }
+    @media (max-width: 888px) {
+      .container {
+        width: 96%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="search-results-header">
+      <div class="ui stackable grid">
+        <div class="row" id="search-header">
+          <div class="six wide column">
+            <h1 class="ui left floated header"><a href="/">Misaki Search</a></h1>
+          </div>
+          <div class="ten wide column">
+            <form class="ui form" id="query_form" action="/" method="get">
+            <div class="ui fluid action mini input">
+              <input type="text" placeholder="Search..." name="q"/>
+              <button onclick="submit()" class="ui orange mini button">Search</button>
+            </div>
+            </form>
+          </div>
+        </div>
+        <div class="row">
+          <div class="column">
+            <div class="ui divider"></div>
+            <div class="ui info message">
+              {{ count }} results got in {{ cost }} seconds.
+            </div>
+            {% for result in results %}
+            <div class="ui basic segment" id="result">
+              <h3 class="ui header"><a href="{{ result["url"] }}">{{ result["title"] }}</a></h3>
+              <p>{% raw result["snippet"] %}</p>
+            </di>
+            {% end %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="text/javascript">
+    function submit() {
+      $("#query_form").submit();
+      console.log("test");
+    }
+  </script>
+</body>
+</html>
