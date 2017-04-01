@@ -1,8 +1,10 @@
 FROM python:3.6
 
-ADD . /app
+ADD . /app/requirements.txt
 
 RUN pip install -r /app/requirements.txt
+
+ADD . /app
 
 ENV PYTHONPATH="/app"
 

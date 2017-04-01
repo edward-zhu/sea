@@ -28,10 +28,15 @@ class ReformatTask(Task):
         self.set_failed(err)
 
     def run(self, args):
-        urls = str(args["urls"][0], encoding='utf-8').split(',')
-        job_path = str(args["job_path"][0], encoding='utf-8')
-        n_part = int(str(args["n_part"][0], encoding='utf-8'))
+        urls = args["urls"].split(',')
+        job_path = args["job_path"]
+        n_part = int(args["n_part"])
+        n_group = int(args["n_group"])
+        start_gid = int(args["start_gid"])
         print(urls, job_path, n_part)
-        rfmt = Reformatter(urls, job_path, n_part)
+        rfmt = Reformatter(urls, job_path, n_part, n_group, start_gid)
         ioloop = IOLoop.current()
         ioloop.add_callback(self._run, rfmt)
+
+    def args(self):
+        return ["urls", "job_path", "n_part", "n_group", "start_gid"]

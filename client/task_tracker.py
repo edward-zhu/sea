@@ -7,6 +7,7 @@ TaskTracker class
 import hashlib
 import time
 import random
+import traceback
 
 from tornado.web import RequestHandler, Application
 from tornado.queues import Queue
@@ -22,6 +23,14 @@ def gen_tid(task_spec):
     '''generate a unique task id'''
     return hashlib.md5((task_spec + str(time.time()) + str(random.random()) + SALT)
                        .encode("utf-8")).hexdigest()
+
+def _parse_args(_task, raw_args):
+    args = {}
+    print(raw_args)
+    for arg in _task.args():
+        # when the encoding is not utf-8 will raise UnicodeDecodeError
+        args[arg] = str(raw_args[arg][0], 'utf-8')
+    return args
 
 class TaskTracker:
     '''
@@ -62,9 +71,24 @@ class TaskTracker:
         # TODO: send heartbeat to job tracker
         print(self.tasks())
 
+    def _task_desc(self, task):
+        TIME_FMT = "%Y-%m-%d %H:%M:%S"
+        start = time.strftime(TIME_FMT, time.localtime(task.start_time))
+        if task.finish_time is None:
+            finish = "Pending"
+        else:
+            finish = time.strftime(TIME_FMT, time.localtime(task.finish_time))
+
+        return {
+            "tid": task.tid,
+            "state" : task.state_str(),
+            "start_time" : start,
+            "finish_time" : finish,
+        }
+
     def tasks(self):
         '''get all tasks and their state'''
-        return [(tid, self._tasks[tid].state()) for tid in self._tasks]
+        return [self._task_desc(self._tasks[tid]) for tid in self._tasks]
 
     def task(self, tid):
         if tid not in self._tasks:
@@ -77,7 +101,12 @@ class TaskTracker:
         return _t.state_str(), ""
 
     def run_task(self, spec, args):
-        '''run a task if this tracker is idle.'''
+        '''
+        run a task if this tracker is idle.
+
+        the arguments of the task will be converted from raw
+        bytes to python *str* with one item for each argument.
+        '''
         if self.busy():
             return False, "", "Busy"
         if spec not in self.task_specs:
@@ -86,8 +115,12 @@ class TaskTracker:
         tid = gen_tid(spec)
         task = self.task_specs[spec](self.msgq, tid)
         try:
+            args = _parse_args(task, args)
             task.run(args)
+        except KeyError as e:
+            return False, "", "Missing argument %s" % str(e)
         except Exception as e:
+            print(traceback.print_exc())
             return False, "", str(e)
         self._tasks[tid] = task
         self.cur_task = tid
