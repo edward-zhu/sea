@@ -1,7 +1,7 @@
 import re
 import json
 
-from xml.parsers.expat import ParserCreate
+from lxml import etree
 
 class WikipediaParser:
     STANDBY = 0
@@ -9,72 +9,34 @@ class WikipediaParser:
     TEXT = 2
 
     WIKI_URL_PREFIX = "https://en.wikipedia.org/wiki/"
+    WIKI_NAMESPACE = "{http://www.mediawiki.org/xml/export-0.10/}"
 
-    def __init__(self):
-        self.p = ParserCreate()
-        self.p.StartElementHandler = self.start_element
-        self.p.EndElementHandler = self.end_element
-        self.p.CharacterDataHandler = self.char_data
-        self.state = WikipediaParser.STANDBY
-        self.cur_title = ""
-        self.cur_text = ""
-        self.cur_docid = 0
-        self.result = []
-        self.trim_re = re.compile(r"http.*?\s|<ref.*?/>|&lt;ref.*?ref&gt;|&lt;math.*?math&gt;|\\t|<code>.*?</code>|"+
+    trim_re = re.compile(r"http.*?\s|<ref.*?/>|&lt;ref.*?ref&gt;|&lt;math.*?math&gt;|\\t|<code>.*?</code>|"+
                                   r"<ref.*?>.*?</ref>|{{.*?}}|{.*?}|--+|[!+<>*{}#\\/|=']|"+
                                   r"\[.*?\]|\]",
                                   flags=re.DOTALL|re.MULTILINE)
 
-    def preprocess(self, str):
-        return self.trim_re.sub("", str)
+    @staticmethod
+    def preprocess(str):
+        return WikipediaParser.trim_re.sub("", str)
 
-    def start_element(self, name, attrs):
-        # print(name)
-        if name == 'title':
-            self.state = WikipediaParser.TITLE
-        elif name == 'text':
-            self.state = WikipediaParser.TEXT
-
-    def end_element(self, name):
-        if name != 'text':
-            return
-        try:
-            data = self.cur_text
-            self.cur_text = ""
-            data= self.preprocess(data).replace(" \n", "").replace("\n\n", "")
-            # print(data)
-        except TypeError as e:
-            print("parsing error: ", data, e)
-            self.state = WikipediaParser.STANDBY
-            return
-        url = WikipediaParser.WIKI_URL_PREFIX + self.cur_title.replace(" ", "_")
-        metadata = {
-            "title" : self.cur_title,
-            "url" : url,
-        }
-        self.result.append((data, metadata))
-        self.cur_docid += 1
-        self.state = WikipediaParser.STANDBY
-
-    def char_data(self, data):
-        if self.state == WikipediaParser.TITLE:
-            self.cur_title = repr(data)
-            self.state = WikipediaParser.STANDBY
-        elif self.state == WikipediaParser.TEXT:
-            d = repr(data).strip()
-            if len(d) > 20:
-                self.cur_text += d + '\n'
-
-
-    def parse(self, f):
-        self.p.ParseFile(f)
-        return self.result
+    def iterparse(self, f):
+        for _, elem in etree.iterparse(f, tag=WikipediaParser.WIKI_NAMESPACE + 'page'):
+            title = elem.findtext(WikipediaParser.WIKI_NAMESPACE + 'title')
+            rev = elem.find(WikipediaParser.WIKI_NAMESPACE + 'revision')
+            doc = rev.findtext(WikipediaParser.WIKI_NAMESPACE + 'text')
+            metadata = {
+                "title": title,
+                "url": WikipediaParser.WIKI_URL_PREFIX + title.replace(" ", "_") 
+            }
+            yield doc, metadata
+            elem.clear()
 
 if __name__ == '__main__':
-    f = open("info_ret.xml", "rb")
+    import bz2
+    f = bz2.open(open("data/info_ret.xml.bz2", "rb"))
     wp = WikipediaParser()
-    ret = wp.parse(f)
+    for doc, md in wp.iterparse(f):
+        print(md)
     f.close()
-
-    with open("out.json", "w") as f:
-        json.dump(ret, f)
+    

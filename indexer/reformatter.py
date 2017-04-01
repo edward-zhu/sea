@@ -1,9 +1,11 @@
-from assignment2.parser import MediaWikiParser
+from indexer.bz2parse import WikipediaParser
 
 import argparse
 import pickle
 import os
 import json
+
+import bz2
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -27,7 +29,7 @@ if __name__ == "__main__":
     show_args(args)
     input_file = args.input_file[0]
 
-    parser = MediaWikiParser()
+    parser = WikipediaParser()
 
     files = []
     for i in range(0, args.num_partitions):
@@ -36,12 +38,21 @@ if __name__ == "__main__":
         files.append(open(fn, "w"))
 
 
-    for doc, md in parser.parseGenerator(input_file):
-        pid = md["doc_id"] % args.num_partitions
-        files[pid].write(json.dumps({
-            "metadata" : md,
-            "doc" : doc.replace("\n\n", "").lower(),
-        }) + '\n')
+    with bz2.open(input_file) as fd:
+        docid = 0
+        for doc, md in parser.iterparse(fd):
+            try:
+                md["doc_id"] = docid
+                pid = md["doc_id"] % args.num_partitions
+                text = json.dumps({
+                    "metadata" : md,
+                    "doc" : WikipediaParser.preprocess(doc).replace("\n\n", "").lower(),
+                }) + '\n'
+            except Exception as e:
+                print(str(e))
+                continue
+            docid += 1
+            files[pid].write(text)
     
     for f in files:
         f.close()
