@@ -1,2 +1,5 @@
 .env
-gcs-service-account.json
+data/*
+k8s_cfgs/*
+jobs/*
+*.pyc

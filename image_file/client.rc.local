@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "mounting gcs..."
+gcsfuse serval-data /app/data/gcloud

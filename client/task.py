@@ -35,7 +35,7 @@ class Task:
         self._state = state
         if state in [Task.FAILED, Task.DONE]:
             self._finish_time = time.time()
-        self.msgq.put({"id" : self.tid, "state" : self.state})
+        self.msgq.put({"tid" : self.tid, "state" : self.state_str(), "error" : self.err})
 
     def set_running(self):
         '''set to running state'''
@@ -50,6 +50,10 @@ class Task:
         self.err = err
         print("task failed:", err)
         self.set_state(Task.FAILED)
+
+    # task.start_time
+    # task.start_time() X
+    # task.start_time = sdfsdfds X
 
     @property
     def start_time(self):

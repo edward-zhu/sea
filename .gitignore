@@ -2,7 +2,7 @@
 *.pyc
 *.out
 gcs-service-account.json
-data/
+data/*
 .venv
 .vscode
 playground
