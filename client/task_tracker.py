@@ -11,7 +11,7 @@ import traceback
 
 from tornado.web import RequestHandler, Application
 from tornado.queues import Queue
-from tornado.gen import coroutine
+from tornado.gen import coroutine, sleep
 from tornado.httpclient import AsyncHTTPClient
 from tornado.ioloop import IOLoop, PeriodicCallback
 
@@ -34,7 +34,7 @@ class TaskTracker:
     '''
 
     HEARTBEAT_INT = 2000 # heartbeat timeout in msec.
-    TRUNCATED_SEC = 20 # truncated to seconds
+    TRUNCATED_SEC = 30 # truncated to seconds
 
     def __init__(self, job_tracker, task_specs):
         self.job_tracker = job_tracker
@@ -59,19 +59,26 @@ class TaskTracker:
             return False
 
     @coroutine
-    def _send_req(self, req):
+    def _send_req(self, req, retry=False):
         # truncated exponential backoff
         delay = 1
-        try:
-            ret = yield self._http_cli.fetch(self.job_tracker + req)
-        except:
-            print("send req failed, retry after %d sec." % (delay,))
-            
-        return ret
+        while True:
+            try:
+                ret = yield self._http_cli.fetch(self.job_tracker + req)
+            except Exception as e:
+                if retry and delay < TaskTracker.TRUNCATED_SEC:
+                    print("send req failed: %s, retry after %d sec." % (str(e), delay,))
+                    yield sleep(delay)
+                    delay *= 2
+                    continue
+                else:
+                    print("send req failed.")
+                    return False, ""
+            return True, ret
 
     @coroutine
     def _report_task_update(self, tid, state, err):
-        yield self._send_req("/update/%s?state=%s&error='%s'" % (tid, state, err))
+        yield self._send_req("/update/%s?state=%s&error='%s'" % (tid, state, err), True)
 
 
     @coroutine
@@ -82,10 +89,10 @@ class TaskTracker:
 
     @coroutine
     def heartbeat(self):
-        try:
-            yield self._send_req("/heartbeat?host=" + self.host)
-        except:
+        ok, res = yield self._send_req("/heartbeat?host=" + self.host)
+        if not ok:
             print('Warning: connect to job tracker failed.')
+
         print(self.tasks())
 
     def _task_desc(self, task):
