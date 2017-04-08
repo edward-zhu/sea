@@ -34,6 +34,7 @@ class TaskTracker:
     '''
 
     HEARTBEAT_INT = 2000 # heartbeat timeout in msec.
+    TRUNCATED_SEC = 20 # truncated to seconds
 
     def __init__(self, job_tracker, task_specs):
         self.job_tracker = job_tracker
@@ -43,6 +44,7 @@ class TaskTracker:
         self.msgq = Queue()
         self.hbt_timer = None
         self._http_cli = AsyncHTTPClient()
+        self._ioloop = None
 
     def current(self):
         '''return the current or most-recent task'''
@@ -58,12 +60,19 @@ class TaskTracker:
 
     @coroutine
     def _send_req(self, req):
-        ret = yield self._http_cli.fetch(self.job_tracker + req)
+        # truncated exponential backoff
+        delay = 1
+        try:
+            ret = yield self._http_cli.fetch(self.job_tracker + req)
+        except:
+            print("send req failed, retry after %d sec." % (delay,))
+            
         return ret
 
     @coroutine
     def _report_task_update(self, tid, state, err):
         yield self._send_req("/update/%s?state=%s&error='%s'" % (tid, state, err))
+
 
     @coroutine
     def msg_handler(self):
@@ -103,7 +112,7 @@ class TaskTracker:
             return None
 
         _t = self._tasks[tid]
-        if _t.state() == Task.FAILED:
+        if _t.state == Task.FAILED:
             return _t.state_str(), _t.err
 
         return _t.state_str(), ""
@@ -135,8 +144,8 @@ class TaskTracker:
         return True, ""
 
     def setup(self, host):
-        ioloop = IOLoop.current()
-        ioloop.add_callback(self.msg_handler)
+        self._ioloop = IOLoop.current()
+        self._ioloop.add_callback(self.msg_handler)
         self.hbt_timer = PeriodicCallback(self.heartbeat, TaskTracker.HEARTBEAT_INT)
         self.hbt_timer.start()
         self.host = host

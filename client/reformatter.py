@@ -22,6 +22,9 @@ from itertools import chain
 from multiprocessing import Queue
 from multiprocessing import Manager
 
+class ReformatterError(Exception):
+    pass
+
 def _parse(url, qs):
     parser = WikipediaParser()
 
@@ -39,11 +42,11 @@ def parse(url, qs):
     try:
         _parse(url, qs)
     except Exception as e:
-        print(str(e))
-        ret = False
-
-    for q in qs:
-        q.put(-1)
+        raise ReformatterError("Exception in parse phase %s" % (str(e),))
+    finally:
+        print('clean parse process...')
+        for q in qs:
+            q.put(-1)
 
     return ret
 
@@ -92,11 +95,9 @@ def split(q, n_parser, n_part, job_path):
     try:
         _split(q, n_parser, n_part, job_path, files)
     except Exception as e:
-        print(str(e))
-        ret = False
-
-    for f in files:
-        f.close()
+        raise ReformatterError("Exception in split phase %s" % (str(e),))
+    finally:
+        map(lambda f: f.close(), files) # close all files
 
     return ret
 
@@ -133,8 +134,12 @@ class Reformatter:
         try:
             rets = yield [self._gen_parse_futures(), self._gen_split_futures()]
             ret = reduce(lambda x, y: x and y, chain(*rets), True)
-        except Exception:
-            return False, traceback.format_exc()
+        except ReformatterError as e:
+            print("reformat failed: %s" % str(e))
+            return False, str(e)
+        except Exception as e:
+            print("reformat failed: %s" % str(e))
+            return False, str(e)
         return ret, ""
 
 
