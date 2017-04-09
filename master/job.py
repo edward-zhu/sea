@@ -44,6 +44,8 @@ class _Task:
     FAILED = 2
     DONE = 3
 
+    STATES = ["STANDBY", "RUNNING", "FAILED", "DONE"]
+
     def __init__(self, _tid, _spec, _args):
         self._tid = _tid
         self._spec = _spec # task spec
@@ -66,6 +68,11 @@ class _Task:
     def state(self):
         '''my state'''
         return self._state
+
+    @property
+    def state_str(self):
+        '''my state in str'''
+        return _Task.STATES[self._state]
 
     @state.setter
     def state(self, _state):
@@ -120,7 +127,7 @@ class _Task:
         return {
             "tid" : self.tid,
             "spec" : self.spec,
-            "state" : self.state,
+            "state" : self.state_str,
             "worker" : self.worker,
             "args" : self._args,
             "error" : self.err
@@ -136,6 +143,8 @@ class Job:
     STANDBY = 0
     RUNNING = 1
     DONE = 2
+
+    STATES = ["STANDBY", "RUNNING", "DONE"]
 
     def __init__(self, tracker, jid, spec_fp):
         '''initialize a job from a yaml spec fp (.read())'''
@@ -164,6 +173,11 @@ class Job:
     def name(self):
         '''my name'''
         return self._name
+
+    @property
+    def state_str(self):
+        '''my state in str'''
+        return Job.STATES[self._state]
 
     def finished(self):
         '''if job is finished'''
@@ -242,6 +256,6 @@ class Job:
         return {
             "jid" : self.jid,
             "name" : self.name,
-            "state" : self._state,
+            "state" : self.state_str,
             "tasks" : [t.desc() for _, t in self._tasks.items()]
         }

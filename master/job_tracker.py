@@ -30,6 +30,8 @@ class Worker:
     DEAD = 2
     LOST = 3
 
+    STATES = ["IDLE", "BUSY", "DEAD", "LOST"]
+
     def __init__(self, host):
         self._host = host
         self._state = Worker.IDLE
@@ -55,6 +57,11 @@ class Worker:
         '''my state'''
         return self._state
 
+    @property
+    def state_str(self):
+        '''my state in str'''
+        return Worker.STATES[self.state]
+
     @state.setter
     def state(self, _state):
         self._state = _state
@@ -69,7 +76,8 @@ class Worker:
     def send(self, req):
         '''send request to worker'''
         ret = yield self._httpcli.fetch(self._host + req)
-        return json.loads(ret.body)
+        print(ret.body)
+        return json.loads(str(ret.body, encoding="utf-8"))
 
     def desc(self):
         return {

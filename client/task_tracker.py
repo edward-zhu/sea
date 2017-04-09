@@ -8,6 +8,7 @@ import hashlib
 import time
 import random
 import traceback
+import socket
 
 from tornado.web import RequestHandler, Application
 from tornado.queues import Queue
@@ -156,6 +157,8 @@ class TaskTracker:
         self.hbt_timer = PeriodicCallback(self.heartbeat, TaskTracker.HEARTBEAT_INT)
         self.hbt_timer.start()
         self.host = host
+        print('task tracker setup: %s.' % (self.host,))
+
 
 tracker = None
 
@@ -183,9 +186,12 @@ class GetTaskHandler(RequestHandler):
             return
         self.write({'status' : 'ok', 'state' : state, 'error' : err})
 
-def make_tracker_app(port):
+def get_internal_ip():
+    return socket.gethostbyname(socket.gethostname())
+
+def make_tracker_app(port, job_tracker):
     global tracker
-    tracker = TaskTracker("http://localhost:9000", {
+    tracker = TaskTracker(job_tracker, {
         'reformat' : ReformatTask,
     })
     app = Application([
@@ -193,12 +199,22 @@ def make_tracker_app(port):
         (r'/task/([^/]+)', GetTaskHandler),
         (r'/new/([^/]+)', NewTaskHandler),
     ])
-    tracker.setup("http://localhost:%d" % (port, ))
+    tracker.setup("http://%s:%d" % (get_internal_ip(), port, ))
 
     return app
 
 if __name__ == '__main__':
-    app = make_tracker_app(8800)
-    app.listen(8800)
-    print('listening on 8800.')
+    import os
+
+    if "JOB_TRACKER" not in os.environ:
+        print("can not find settings in env, exit.")
+        exit(1)
+
+    port = 8800 if "TASK_TRACKER_PORT" not in os.environ else int(os.environ["TASK_TRACKER_PORT"])
+    job_tracker = os.environ["JOB_TRACKER"]
+
+    app = make_tracker_app(port, job_tracker)
+    app.listen(port)
+    print('new task tracker listening on %d.' % (port,))
+    print('using job tracker: %s.' % (job_tracker,))
     IOLoop.current().start()

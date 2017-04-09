@@ -1,0 +1,25 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  # Unique key of the Deployment instance
+  name: sea-deployment
+spec:
+  replicas: 2
+  # Keep record of 2 revisions for rollback
+  revisionHistoryLimit: 2
+  template:
+    metadata:
+      labels:
+        # Apply this label to pods and default
+        # the Deployment label selector to this value
+        app: sea-task-tracker
+    spec:
+      containers:
+      - name: task-tracker
+        # Run this image
+        image: sea-client
+        imagePullPolicy: Never
+        ports: 
+        - containerPort: 8800
+        securityContext:
+            privileged: true

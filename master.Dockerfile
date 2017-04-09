@@ -18,7 +18,7 @@ RUN pip install wheel \
     && pip install -r /app/requirements.txt \
     && mkdir /etc/service/servalmaster
 
-ADD . /app
+ADD ./master /app/master
 COPY ./image_file/master.rc.local /etc/rc.local
 COPY ./image_file/start_job_tracker.sh /etc/service/servalmaster/run
 RUN chmod +x /etc/service/servalmaster/run \

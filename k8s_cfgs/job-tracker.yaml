@@ -1,0 +1,22 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  # Unique key of the Deployment instance
+  name: sea-master
+spec:
+  template:
+    metadata:
+      labels:
+        # Apply this label to pods and default
+        # the Deployment label selector to this value
+        app: sea-job-tracker
+    spec:
+      containers:
+      - name: job-tracker
+        # Run this image
+        image: sea-master
+        imagePullPolicy: IfNotPresent
+        ports: 
+        - containerPort: 9000
+        securityContext:
+            privileged: true
