@@ -13,17 +13,13 @@ RUN echo "deb http://packages.cloud.google.com/apt gcsfuse-xenial main" | tee /e
   && mkdir -p /app/data/gcloud \
   && ln -s /usr/bin/python3 /usr/local/bin/python \
   && ln -s /usr/bin/pip3 /usr/local/bin/pip \
-  && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-RUN pip install wheel \
-    && pip install -r /app/requirements.txt \
-    && mkdir /etc/service/servalclient
+  && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+  && pip install wheel \
+  && pip install -r /app/requirements.txt
 
 ADD . /app
 COPY ./image_file/client.rc.local /etc/rc.local
-COPY ./image_file/start_task_tracker.sh /etc/service/servalclient/run
-RUN chmod +x /etc/service/servalclient/run \
-    && chmod +x /etc/rc.local
+RUN chmod +x /etc/rc.local
 
 EXPOSE 8800
 

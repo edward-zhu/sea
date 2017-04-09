@@ -1,3 +1,6 @@
 #!/bin/sh
 echo "mounting gcs..."
 gcsfuse serval-data /app/data/gcloud
+
+echo "starting job tracker..."
+python -u /app/master/job_tracker.py &

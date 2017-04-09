@@ -1,4 +1,6 @@
 .env
+.venv
+.vscode
 data/*
 k8s_cfgs/*
 jobs/*
