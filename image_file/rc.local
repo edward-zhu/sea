@@ -1,0 +1,8 @@
+#!/bin/sh
+echo "common operaions..."
+
+echo "sync time..."
+ntpdate time.google.com
+
+echo "mounting gcs..."
+gcsfuse serval-data /app/data/gcloud

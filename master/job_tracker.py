@@ -112,6 +112,7 @@ class JobTracker:
         self._workers = {} # initially no worker is visible or available
         self._jobs = {}
         self._cur_job = None
+        self._ioloop = IOLoop.current()
 
     def check_heartbeat(self):
         # TODO: check heartbeat timeout
@@ -159,7 +160,7 @@ class JobTracker:
             return
         self._cur_job.update_task(tid, state, err)
         if self._cur_job is not None:
-            yield self._cur_job.schedule()
+            self._ioloop.add_callback(self._cur_job.schedule)
 
     def job(self, jid):
         return self._jobs[jid]
@@ -199,7 +200,7 @@ class HeartbeatReqHandler(RequestHandler):
     def get(self):
         host = self.get_argument('host')
         yield tracker.heartbeat_received(host)
-        self.write({"status" : "ok"})
+        self.finish({"status" : "ok"})
 
 class TaskUpdateRequest(RequestHandler):
     @coroutine
@@ -207,7 +208,7 @@ class TaskUpdateRequest(RequestHandler):
         state = self.get_argument('state')
         error = self.get_argument('error')
         yield tracker.task_update_received(tid, state, error)
-        self.write({"status" : "ok"})
+        self.finish({"status" : "ok"})
 
 class JobCreateRequest(RequestHandler):
     @coroutine
@@ -217,9 +218,9 @@ class JobCreateRequest(RequestHandler):
         ok, err = yield tracker.run_job(f)
         f.close()
         if ok:
-            self.write({"status" : "ok"})
+            self.finish({"status" : "ok"})
             return
-        self.write({"status" : "error", "error" : err})
+        self.finish({"status" : "error", "error" : err})
 
 class GetStatusHandler(RequestHandler):
     @coroutine

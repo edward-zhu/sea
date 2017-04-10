@@ -9,6 +9,8 @@ import os
 import json
 import traceback
 
+import bz2
+
 from concurrent.futures import ProcessPoolExecutor
 from indexer.bz2parse import WikipediaParser
 from urllib.request import urlopen
@@ -50,14 +52,18 @@ def parse(url, qs):
 
     return ret
 
-def _split(q, n_parser, n_part, job_path, files):
+def _split(q, n_parser, n_part, job_path, files, compress=False):
     if not os.path.exists(job_path):
         os.mkdir(job_path)
 
     for i in range(0, n_part):
-        fn = gen_output_filename(job_path, i)
+        fn = gen_output_filename(job_path, i, compress)
         print("output file #%d:%s" % (i, fn))
-        files.append(open(fn, "w"))
+        if compress:
+            f = bz2.open(fn, "wt")
+        else:
+            f = open(fn, "w")
+        files.append(f)
 
     finished = 0
     count = 0
@@ -85,7 +91,7 @@ def _split(q, n_parser, n_part, job_path, files):
         files[pid].write(text)
         count += 1
 
-def split(q, n_parser, n_part, job_path):
+def split(q, n_parser, n_part, job_path, compress=False):
     '''
     split group data into N parts
     '''
@@ -93,7 +99,7 @@ def split(q, n_parser, n_part, job_path):
     files = []
 
     try:
-        _split(q, n_parser, n_part, job_path, files)
+        _split(q, n_parser, n_part, job_path, files, compress)
     except Exception as e:
         raise ReformatterError("Exception in split phase %s" % (str(e),))
     finally:
@@ -101,14 +107,17 @@ def split(q, n_parser, n_part, job_path):
 
     return ret
 
-def gen_output_filename(job_path, i):
+def gen_output_filename(job_path, i, compress=False):
+    if compress:
+        return os.path.join(job_path, "reformatted_%d.in.bz2" % i)
+
     return os.path.join(job_path, "reformatted_%d.in" % i)
 
 
 class Reformatter:
     executor = ProcessPoolExecutor()
 
-    def __init__(self, input_urls, job_path, n_part, n_group, start_gid):
+    def __init__(self, input_urls, job_path, n_part, n_group, start_gid, compress=True):
         self.input_urls = input_urls
         self.job_path = job_path
         self.n_part = n_part
@@ -116,6 +125,7 @@ class Reformatter:
         self.start_gid = start_gid
         self.manager = Manager()
         self.queues = [self.manager.Queue() for _ in range(0, n_group)]
+        self.compress = compress
 
     def _gen_split_futures(self):
         return [Reformatter
@@ -124,7 +134,7 @@ class Reformatter:
                         self.queues[i],
                         len(self.input_urls),
                         self.n_part,
-                        os.path.join(self.job_path, str(self.start_gid + i)))
+                        os.path.join(self.job_path, str(self.start_gid + i)), self.compress)
                 for i in range(0, self.n_group)]
     def _gen_parse_futures(self):
         return [Reformatter.executor.submit(parse, url, self.queues) for url in self.input_urls]

@@ -1,7 +1,7 @@
 name : test
 tasks:
   - spec : reformat
-    urls : https://dumps.wikimedia.org/enwiki/20170320/enwiki-20170320-pages-articles1.xml-p000000010p000030302.bz2
+    urls : http://localhost:8000/enwiki-latest-pages-articles2.xml-p000030304p000088444.bz2,http://localhost:8000/enwiki_10.xml.bz2
     job_path : data/
     n_part : 4
     n_group : 2

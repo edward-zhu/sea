@@ -1,2 +1,2 @@
 #!/bin/sh
-exec python /app/master/job_tracker.py
+exec python -u /app/master/job_tracker.py

@@ -1,2 +1,2 @@
 #!/bin/sh
-exec python /app/client/task_tracker.py
+exec python -u /app/client/task_tracker.py

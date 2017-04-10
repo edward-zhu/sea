@@ -10,14 +10,16 @@ import random
 import traceback
 import socket
 
+import urllib.parse
+
 from tornado.web import RequestHandler, Application
 from tornado.queues import Queue
 from tornado.gen import coroutine, sleep
 from tornado.httpclient import AsyncHTTPClient
 from tornado.ioloop import IOLoop, PeriodicCallback
 
-from reformat_task import ReformatTask
-from task import Task
+from client.reformat_task import ReformatTask
+from client.task import Task
 
 
 def _parse_args(_task, raw_args):
@@ -44,7 +46,6 @@ class TaskTracker:
         self.cur_task = None
         self.msgq = Queue()
         self.hbt_timer = None
-        self._http_cli = AsyncHTTPClient()
         self._ioloop = None
 
     def current(self):
@@ -61,11 +62,13 @@ class TaskTracker:
 
     @coroutine
     def _send_req(self, req, retry=False):
+        http_cli = AsyncHTTPClient()
         # truncated exponential backoff
         delay = 1
         while True:
             try:
-                ret = yield self._http_cli.fetch(self.job_tracker + req)
+                print("req: ", self.job_tracker + req)
+                ret = yield http_cli.fetch(self.job_tracker + req)
             except Exception as e:
                 if retry and delay < TaskTracker.TRUNCATED_SEC:
                     print("send req failed: %s, retry after %d sec." % (str(e), delay,))
@@ -79,7 +82,7 @@ class TaskTracker:
 
     @coroutine
     def _report_task_update(self, tid, state, err):
-        yield self._send_req("/update/%s?state=%s&error='%s'" % (tid, state, err), True)
+        yield self._send_req('/update/%s?state=%s&error="%s"' % (tid, state, urllib.parse.quote(err)), True)
 
 
     @coroutine
