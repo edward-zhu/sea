@@ -25,12 +25,13 @@ results = {}
 def gen_taskid(input_file):
     return hashlib.md5((input_file + str(time.time()) + SALT).encode("utf-8")).hexdigest()
 
+env = os.environ.copy()
 executor = ThreadPoolExecutor()
 
 def runMapper(exec_file, input_file, num_reducers):
     f = open(input_file, "r", encoding="utf-8")
     proc = subprocess.Popen([exec_file], stdin=f,
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
 
     result = [[] for i in range(0, num_reducers)]
 
@@ -124,7 +125,7 @@ def runReducer(exec_file, input_data, job_path, reducer_ix):
     err_file = os.path.join(job_path, "%d.err" % reducer_ix)
     f = open(output_file, "wb")
     ef = open(output_file, "wb")
-    proc = subprocess.Popen([exec_file], stdin=subprocess.PIPE, stdout=f, stderr=ef)
+    proc = subprocess.Popen([exec_file], stdin=subprocess.PIPE, stdout=f, stderr=ef, env=env)
 
     proc.stdin.write(input_data)
     proc.stdin.close()

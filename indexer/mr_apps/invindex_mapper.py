@@ -4,7 +4,7 @@ import sys
 import json
 from nltk.corpus import stopwords
 
-from assignment2.utils.tokenizer import StemTokenizer
+from search.utils.tokenizer import StemTokenizer
 
 tokenize = StemTokenizer()
 
