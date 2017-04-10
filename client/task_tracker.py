@@ -82,7 +82,8 @@ class TaskTracker:
 
     @coroutine
     def _report_task_update(self, tid, state, err):
-        yield self._send_req('/update/%s?state=%s&error="%s"' % (tid, state, urllib.parse.quote(err)), True)
+        yield self._send_req('/update/%s?state=%s&error="%s"' %
+                             (tid, state, urllib.parse.quote(err)), True)
 
 
     @coroutine

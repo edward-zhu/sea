@@ -10,18 +10,9 @@ import os
 import pickle
 import argparse
 import multiprocessing
-import leveldb
-import base64
-import json
 
-from assignment4.dist_tfidf import DistTFIDFVectorizer
+from indexer.dist_tfidf import DistTFIDFVectorizer
 
-def toByte(doc):
-    return json.dumps({
-        "metadata" : doc["metadata"],
-        "sents" : doc["sents"],
-        "sents_rep" : str(base64.urlsafe_b64encode(pickle.dumps(doc["sents_rep"])))
-    }).encode('utf-8')
 
 def gen(doc_out, invindex_out, output_path, doc_prefix, invindex_prefix, pid):
     """generate binary invindex and doc_rep for one parition"""
@@ -73,15 +64,20 @@ def parse_args():
 
     return parser.parse_args()
 
-if __name__ == '__main__':
-    args = parse_args()
-
+def integrate(doc_out, invindex_out, output_path, doc_prefix, invindex_prefix, n_part):
     procs = []
-    for i in range(0, args.nparts):
+    for i in range(0, n_part):
         procs.append(multiprocessing.Process(
             target=gen,
-            args=(args.doc_result % i, args.inv_result % i,
-                  args.out_path, args.doc_prefix, args.inv_prefix, i)))
+            args=(doc_out % i, invindex_out % i,
+                  output_path, doc_prefix, invindex_prefix, i)))
         procs[i].start()
     for p in procs:
         p.join()
+
+if __name__ == '__main__':
+    args = parse_args()
+
+    integrate(args.doc_result, args.inv_result,
+              args.out_path, args.doc_prefix, args.inv_prefix, args.nparts)
+    

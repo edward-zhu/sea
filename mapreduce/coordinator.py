@@ -64,7 +64,7 @@ class Coordinator:
         for res in map_res:
             if res.code != 200:
                 return self.err("map", "connection failed: %d" % res.code)
-            data = json.loads(res.body)
+            data = json.loads(str(res.body, encoding="utf-8"))
             if data["status"] != "success":
                 if "error" in data:
                     return self.err("map", "mapper failed: %s" % data["error"])
@@ -79,7 +79,7 @@ class Coordinator:
         for res in reduce_res:
             if res.code != 200:
                 return self.err("reduce", "connection failed %d" % res.code)
-            data = json.loads(res.body)
+            data = json.loads(str(res.body, encoding="utf-8"))
             if data["status"] != "success":
                 if "error" in data:
                     return self.err("reduce", "reducer failed: %s" % data["error"])

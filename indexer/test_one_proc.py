@@ -5,9 +5,9 @@ import math
 from sklearn.feature_extraction.text import TfidfVectorizer
 from tornado.ioloop import IOLoop
 
-from assignment2.utils.tokenizer import StemTokenizer
-from assignment3.coordinator import Coordinator
-from assignment4.dist_tfidf import DistTFIDFVectorizer
+from search.utils.tokenizer import StemTokenizer
+from mapreduce.coordinator import Coordinator
+from indexer.dist_tfidf import DistTFIDFVectorizer
 
 INV_MAPPER_PATH = "mr_apps/invindex_mapper.py"
 INV_REDUCER_PATH = "mr_apps/invindex_reducer.py"
