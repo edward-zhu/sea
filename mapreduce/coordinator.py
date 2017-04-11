@@ -62,7 +62,8 @@ class Coordinator:
                                   reducer_path=self.reducer_path,
                                   map_task_ids=map_task_ids,
                                   input_path=self.input_path,
-                                  output_path=self.output_path) for i in range(0, self.num_reducers)]
+                                  output_path=self.output_path)
+                for i in range(0, self.num_reducers)]
         return [cli.fetch(url, request_timeout=6000) for url in urls]
 
     @coroutine
@@ -99,7 +100,12 @@ class Coordinator:
                     return self.err("reduce", "reducer failed unexpectedly")
         print("reduce phase done.")
 
-        return True, ""
+        return "ok"
+
+    def run_sync(self):
+        '''run coordinator in a sync way (wait until the mapreduce job finished.)'''
+        print("start coordinator..")
+        return IOLoop().run_sync(self.run)
 
 @coroutine
 def main(args):

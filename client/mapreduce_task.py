@@ -10,6 +10,8 @@ from tornado.gen import coroutine
 from client.task import Task
 from mapreduce.coordinator import Coordinator
 
+from concurrent.futures import ProcessPoolExecutor
+
 '''
 Tasks:
 - copy all assigned raw file to local
@@ -17,12 +19,14 @@ Tasks:
 '''
 
 class MapreduceTask(Task):
+    executor = ProcessPoolExecutor()
+
     '''Call Coordinator to do mapreduce jobs'''
     @coroutine
     def _run(self, cdnt):
         self.set_running()
-        ret, err = yield cdnt.run()
-        if ret:
+        err = yield MapreduceTask.executor.submit(cdnt.run_sync)
+        if err == "ok":
             self.set_done()
             return
         self.set_failed(err)

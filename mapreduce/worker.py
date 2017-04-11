@@ -38,8 +38,6 @@ def decompress(input_file, pipe):
     pipe.close()
 
 def runMapper(exec_file, input_file, num_reducers):
-    print(input_file[-4:])
-
     result = [[] for i in range(0, num_reducers)]
 
     f = None
