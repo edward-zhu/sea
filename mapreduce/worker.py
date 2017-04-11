@@ -14,6 +14,8 @@ import time
 import subprocess
 import os
 import bz2
+import io
+import threading
 from concurrent.futures import ThreadPoolExecutor
 
 from mapreduce.utils import hashf
@@ -29,19 +31,28 @@ def gen_taskid(input_file):
 env = os.environ.copy()
 executor = ThreadPoolExecutor()
 
+def decompress(input_file, pipe):
+    f = bz2.open(input_file, "r")
+    for line in f:
+        pipe.write(line)
+    pipe.close()
+
 def runMapper(exec_file, input_file, num_reducers):
     print(input_file[-4:])
-    if input_file[-4:] == ".bz2":
-        print('bzip file...')
-        f = bz2.open(input_file, "rt", encoding="utf-8")
-    else: 
-        print('normal file...')
-        f = open(input_file, "r", encoding="utf-8")
-    proc = subprocess.Popen([exec_file], stdin=f,
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
 
     result = [[] for i in range(0, num_reducers)]
 
+    f = None
+    if input_file[-4:] == ".bz2":
+        proc = subprocess.Popen([exec_file], stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                env=env)
+        threading.Thread(target=decompress, args=(input_file, proc.stdin)).start()
+    else:
+        f = open(input_file, "r", encoding="utf-8")
+        proc = subprocess.Popen([exec_file], stdin=f,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                env=env)
     count = 0
     for line in proc.stdout:
         kv = line.decode("utf-8").split("\t")
@@ -53,7 +64,9 @@ def runMapper(exec_file, input_file, num_reducers):
         print("map error:\t", line)
 
     # close file handlers
-    f.close()
+    if f is not None:
+        f.close()
+
     proc.stdout.close()
     proc.stderr.close()
 
@@ -173,7 +186,8 @@ class ReduceHandler(RequestHandler):
 
         ret = 0
         try:
-            ret = yield executor.submit(runReducer, reducer_path, input_data, output_path, reducer_ix)
+            ret = yield executor.submit(runReducer,
+                                        reducer_path, input_data, output_path, reducer_ix)
         except Exception as e:
             self.write({"status": "failed", "error" : "Reducer run failed: %s" % str(e)})
             return
