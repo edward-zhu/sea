@@ -242,9 +242,11 @@ def make_tracker_app():
     return app
 
 if __name__ == '__main__':
+    import os
     app = make_tracker_app()
-    app.listen(9000)
-    print('job tracker listening on 9000.')
+    port = 9000 if "JOB_TRACKER_PORT" not in os.environ else int(os.environ["JOB_TRACKER_PORT"])
+    app.listen(port)
+    print('job tracker listening on %d.' % (port, ))
     IOLoop.current().start()
 
 

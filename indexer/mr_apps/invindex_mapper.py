@@ -3,8 +3,22 @@
 import sys
 import json
 from nltk.corpus import stopwords
+from nltk.stem import SnowballStemmer
+from nltk.tokenize import RegexpTokenizer
 
-from search.utils.tokenizer import StemTokenizer
+class StemTokenizer:
+    def __init__(self):
+        self.stemmer = SnowballStemmer('english')
+        self.rt = RegexpTokenizer(r'(?u)\b\w\w+\b')
+
+    def __call__(self, doc, keep=True):
+        tokens = []
+        for t in self.rt.tokenize(doc):
+            tokens.append(t)
+            stemmed = self.stemmer.stem(t)
+            if t != stemmed and keep:
+                tokens.append(stemmed)
+        return tokens
 
 tokenize = StemTokenizer()
 

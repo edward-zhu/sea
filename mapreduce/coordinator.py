@@ -42,7 +42,7 @@ class Coordinator:
                                   mapper_path=self.mapper_path,
                                   input_file=f,
                                   num_reducers=self.num_reducers) for i, f in enumerate(files)]
-        return [cli.fetch(url, request_timeout=600) for url in urls]
+        return [cli.fetch(url, request_timeout=6000) for url in urls]
 
     def _get_reduce_reqs(self, cli, map_task_ids):
         worker_urls = utils.worker_urls()
@@ -51,7 +51,7 @@ class Coordinator:
                                   reducer_path=self.reducer_path,
                                   map_task_ids=map_task_ids,
                                   job_path=self.job_path) for i in range(0, self.num_reducers)]
-        return [cli.fetch(url, request_timeout=600) for url in urls]
+        return [cli.fetch(url, request_timeout=6000) for url in urls]
 
     @coroutine
     def run(self):

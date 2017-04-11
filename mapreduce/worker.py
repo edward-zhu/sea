@@ -116,7 +116,7 @@ def gen_map_requests(rix, cli, ids):
     urls = ["%s/retrive_map_output?reducer_ix=%d&map_task_id=%s" %
             (worker_urls[i % n_workers], rix, _id) for i, _id in enumerate(ids)]
 
-    return [cli.fetch(url, connect_timeout=600, request_timeout=600) for url in urls]
+    return [cli.fetch(url, connect_timeout=6000, request_timeout=6000) for url in urls]
 
 from functools import reduce
 
@@ -158,7 +158,7 @@ class ReduceHandler(RequestHandler):
             if r.code != 200:
                 self.write({"status" : "failed", "error" : "Fetch map result failed: %d" % r.code})
                 return
-            map_res.extend(json.loads(r.body))
+            map_res.extend(json.loads(str(r.body, encoding="utf-8")))
 
         map_res.sort(key=lambda x: x[0])
         input_data = "\n".join(map(lambda x: "\t".join(x).strip(), map_res)).encode("utf-8")
