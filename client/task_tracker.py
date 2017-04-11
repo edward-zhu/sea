@@ -19,6 +19,7 @@ from tornado.httpclient import AsyncHTTPClient
 from tornado.ioloop import IOLoop, PeriodicCallback
 
 from client.reformat_task import ReformatTask
+from client.mapreduce_task import MapreduceTask
 from client.task import Task
 
 
@@ -197,6 +198,7 @@ def make_tracker_app(port, job_tracker):
     global tracker
     tracker = TaskTracker(job_tracker, {
         'reformat' : ReformatTask,
+        'mapreduce' : MapreduceTask,
     })
     app = Application([
         (r'/status', GetStatusHandler),
