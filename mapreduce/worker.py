@@ -13,6 +13,9 @@ import hashlib
 import time
 import subprocess
 import os
+import bz2
+import io
+import threading
 from concurrent.futures import ThreadPoolExecutor
 
 from mapreduce.utils import hashf
@@ -28,13 +31,26 @@ def gen_taskid(input_file):
 env = os.environ.copy()
 executor = ThreadPoolExecutor()
 
-def runMapper(exec_file, input_file, num_reducers):
-    f = open(input_file, "r", encoding="utf-8")
-    proc = subprocess.Popen([exec_file], stdin=f,
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+def decompress(input_file, pipe):
+    f = bz2.open(input_file, "r")
+    for line in f:
+        pipe.write(line)
+    pipe.close()
 
+def runMapper(exec_file, input_file, num_reducers):
     result = [[] for i in range(0, num_reducers)]
 
+    f = None
+    if input_file[-4:] == ".bz2":
+        proc = subprocess.Popen([exec_file], stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                env=env)
+        threading.Thread(target=decompress, args=(input_file, proc.stdin)).start()
+    else:
+        f = open(input_file, "r", encoding="utf-8")
+        proc = subprocess.Popen([exec_file], stdin=f,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                env=env)
     count = 0
     for line in proc.stdout:
         kv = line.decode("utf-8").split("\t")
@@ -46,7 +62,9 @@ def runMapper(exec_file, input_file, num_reducers):
         print("map error:\t", line)
 
     # close file handlers
-    f.close()
+    if f is not None:
+        f.close()
+
     proc.stdout.close()
     proc.stderr.close()
 
@@ -120,9 +138,9 @@ def gen_map_requests(rix, cli, ids):
 
 from functools import reduce
 
-def runReducer(exec_file, input_data, job_path, reducer_ix):
-    output_file = os.path.join(job_path, "%d.out" % reducer_ix)
-    err_file = os.path.join(job_path, "%d.err" % reducer_ix)
+def runReducer(exec_file, input_data, output_path, reducer_ix):
+    output_file = os.path.join(output_path, "%d.out" % reducer_ix)
+    err_file = os.path.join(output_path, "%d.err" % reducer_ix)
     f = open(output_file, "wb")
     ef = open(output_file, "wb")
     proc = subprocess.Popen([exec_file], stdin=subprocess.PIPE, stdout=f, stderr=ef, env=env)
@@ -144,7 +162,8 @@ class ReduceHandler(RequestHandler):
             reducer_ix = int(self.get_argument("reducer_ix"))
             reducer_path = self.get_argument("reducer_path")
             ids = self.get_argument("map_task_ids").split(",")
-            job_path = self.get_argument("job_path")
+            output_path = self.get_argument("output_path")
+            input_path = self.get_argument("input_path")
         except MissingArgumentError as err:
             self.write({"status" : "failed", "error" : str(err)})
             return
@@ -165,7 +184,8 @@ class ReduceHandler(RequestHandler):
 
         ret = 0
         try:
-            ret = yield executor.submit(runReducer, reducer_path, input_data, job_path, reducer_ix)
+            ret = yield executor.submit(runReducer,
+                                        reducer_path, input_data, output_path, reducer_ix)
         except Exception as e:
             self.write({"status": "failed", "error" : "Reducer run failed: %s" % str(e)})
             return

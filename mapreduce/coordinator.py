@@ -12,29 +12,40 @@ from tornado.gen import coroutine
 from mapreduce import manifest
 from mapreduce import utils
 
+
 def parse_args():
     '''parse arguments'''
     parser = argparse.ArgumentParser()
     parser.add_argument("--mapper_path", required=True, help="mapper .py's path")
     parser.add_argument("--reducer_path", required=True, help="reducer .py's path")
-    parser.add_argument("--job_path", required=True, help="path to input data files.")
+    #parser.add_argument("--job_path", required=True, help="path to input data files.")
+    parser.add_argument("--input_path", required=True, help="path to input data files.") #divide the input and output
+    parser.add_argument("--output_path", required=True, help="path to output data files.")
     parser.add_argument("--num_reducers", type=int, required=True, help="number of reducers")
 
     return parser.parse_args()
 
 class Coordinator:
-    def __init__(self, mapper_path, reducer_path, job_path, num_reducers):
+    def __init__(self, mapper_path, reducer_path, input_path, output_path, num_reducers):
         self.mapper_path = mapper_path
         self.reducer_path = reducer_path
-        self.job_path = job_path
+        #self.job_path = job_path
+        self.input_path = input_path
+        self.output_path = output_path
         self.num_reducers = num_reducers
 
     def err(self, phase, err):
         return "fatal: at %s phase: %s" % (phase, err)
 
     def _get_input_files(self):
-        files = list(filter(lambda x: x[-3:] == ".in", os.listdir(self.job_path)))
-        return [os.path.join(self.job_path, f) for f in files]
+        files = []
+        for path in self.input_path:
+            # fs = list(filter(lambda x: x[-3:] in [".in", ".in.bz2"], os.listdir(path)))
+            fs = os.listdir(path)
+            fs = map(lambda x: os.path.join(path, x), fs)
+            files.extend(fs)
+            #files = os.listdir(self.input_path)
+        return files
 
     def _get_map_reqs(self, cli, files):
         worker_urls = utils.worker_urls()
@@ -50,7 +61,9 @@ class Coordinator:
                                   reducer_ix=i,
                                   reducer_path=self.reducer_path,
                                   map_task_ids=map_task_ids,
-                                  job_path=self.job_path) for i in range(0, self.num_reducers)]
+                                  input_path=self.input_path,
+                                  output_path=self.output_path)
+                for i in range(0, self.num_reducers)]
         return [cli.fetch(url, request_timeout=6000) for url in urls]
 
     @coroutine
@@ -87,13 +100,18 @@ class Coordinator:
                     return self.err("reduce", "reducer failed unexpectedly")
         print("reduce phase done.")
 
-        return "ok."
+        return "ok"
+
+    def run_sync(self):
+        '''run coordinator in a sync way (wait until the mapreduce job finished.)'''
+        print("start coordinator..")
+        return IOLoop().run_sync(self.run)
 
 @coroutine
 def main(args):
     '''main func'''
-    c = Coordinator(args.mapper_path, args.reducer_path, args.job_path, args.num_reducers)
-    ret = yield c.run()
+    c = Coordinator(args.mapper_path, args.reducer_path, args.input_path.split(','), args.output_path, args.num_reducers)
+    ret, err = yield c.run()
     print(ret)
     IOLoop.instance().stop()
 

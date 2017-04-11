@@ -19,6 +19,7 @@ from tornado.httpclient import AsyncHTTPClient
 from tornado.ioloop import IOLoop, PeriodicCallback
 
 from client.reformat_task import ReformatTask
+from client.mapreduce_task import MapreduceTask
 from client.task import Task
 
 
@@ -94,11 +95,16 @@ class TaskTracker:
 
     @coroutine
     def heartbeat(self):
+        pass
+
+        '''
+        TODO: fix me
         ok, res = yield self._send_req("/heartbeat?host=" + self.host)
         if not ok:
             print('Warning: connect to job tracker failed.')
 
         print(self.tasks())
+        '''
 
     def _task_desc(self, task):
         TIME_FMT = "%Y-%m-%d %H:%M:%S"
@@ -197,6 +203,7 @@ def make_tracker_app(port, job_tracker):
     global tracker
     tracker = TaskTracker(job_tracker, {
         'reformat' : ReformatTask,
+        'mapreduce' : MapreduceTask,
     })
     app = Application([
         (r'/status', GetStatusHandler),
