@@ -74,7 +74,7 @@ class Indexer:
         return sents, self.vectorizer().transform(sents)
 
     def save_docs(self, prefix):
-        partitioned = [];
+        partitioned = []
         nsrv = manifest.N_DOC_SRV
         for i in range(0, nsrv):
             partitioned.append({})

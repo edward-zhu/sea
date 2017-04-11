@@ -113,7 +113,7 @@ class JobTracker:
         self._jobs = {}
         self._cur_job = None
         self._ioloop = IOLoop.current()
-
+ 
     def check_heartbeat(self):
         # TODO: check heartbeat timeout
         pass
@@ -188,8 +188,10 @@ class JobTracker:
         job = Job(self, jid, fd)
         self._jobs[jid] = job
         self._cur_job = job
-
-        yield self._cur_job.schedule()
+        try:
+            yield self._cur_job.schedule()
+        except Exception as e:
+            return False, str(e)
 
         return True, ""
 
@@ -248,7 +250,3 @@ if __name__ == '__main__':
     app.listen(port)
     print('job tracker listening on %d.' % (port, ))
     IOLoop.current().start()
-
-
-
-
