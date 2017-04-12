@@ -64,7 +64,7 @@ def parse_args():
 
     return parser.parse_args()
 
-def integrate(doc_out, invindex_out, output_path, doc_prefix, invindex_prefix, n_part):
+def integrate(doc_out, invindex_out,output_path, doc_prefix, invindex_prefix, n_part):
     procs = []
     for i in range(0, n_part):
         procs.append(multiprocessing.Process(
@@ -80,4 +80,3 @@ if __name__ == '__main__':
 
     integrate(args.doc_result, args.inv_result,
               args.out_path, args.doc_prefix, args.inv_prefix, args.nparts)
-    

@@ -16,7 +16,10 @@ import os
 import bz2
 import io
 import threading
+import heapq
 from concurrent.futures import ThreadPoolExecutor
+from collections import defaultdict
+from operator import itemgetter
 
 from mapreduce.utils import hashf
 from mapreduce import utils
@@ -51,12 +54,12 @@ def runMapper(exec_file, input_file, num_reducers):
         proc = subprocess.Popen([exec_file], stdin=f,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 env=env)
-    count = 0
+
+    out_by_part = defaultdict(list)
+
     for line in proc.stdout:
         kv = line.decode("utf-8").split("\t")
-        rid = hashf(kv[0]) % num_reducers
-        result[rid].append([kv[0], kv[1]])
-        count += 1
+        out_by_part[kv[0]].append([kv[0], kv[1]])
 
     for line in proc.stderr:
         print("map error:\t", line)
@@ -73,8 +76,10 @@ def runMapper(exec_file, input_file, num_reducers):
     if ret != 0:
         return ret, {}
 
-    for r in result:
-        r.sort(key=lambda x: x[0])
+    # rid = hashf(kv[0]) % num_reducers
+    for k in sorted(out_by_part.keys()):
+        rid = hashf(k) % num_reducers
+        result[rid].extend(out_by_part[k])
 
     return ret, result
 
@@ -127,6 +132,7 @@ class RetriveMapOutputHandler(RequestHandler):
             self.write("[]")
             return
         self.write(json.dumps(results[task_id][reducer_ix]))
+        results[task_id][reducer_ix] = None
 
 def gen_map_requests(rix, cli, ids):
     worker_urls = utils.worker_urls()
@@ -177,9 +183,11 @@ class ReduceHandler(RequestHandler):
             if r.code != 200:
                 self.write({"status" : "failed", "error" : "Fetch map result failed: %d" % r.code})
                 return
+            #map_res.append(json.loads(str(r.body, encoding="utf-8")))
             map_res.extend(json.loads(str(r.body, encoding="utf-8")))
 
-        map_res.sort(key=lambda x: x[0])
+        map_res.sort(key=itemgetter(0))
+        #merged_res = heapq.merge(*map_res, key=itemgetter(0))
         input_data = "\n".join(map(lambda x: "\t".join(x).strip(), map_res)).encode("utf-8")
 
         ret = 0
