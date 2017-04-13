@@ -95,16 +95,11 @@ class TaskTracker:
 
     @coroutine
     def heartbeat(self):
-        pass
-
-        '''
-        TODO: fix me
         ok, res = yield self._send_req("/heartbeat?host=" + self.host)
         if not ok:
             print('Warning: connect to job tracker failed.')
 
-        print(self.tasks())
-        '''
+        # print(self.tasks())
 
     def _task_desc(self, task):
         TIME_FMT = "%Y-%m-%d %H:%M:%S"

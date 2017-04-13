@@ -8,23 +8,27 @@ Using circus to spawn all the worker process
 '''
 
 import os
-from circus import get_arbiter
+import time
+import sys
+import subprocess
 
 from mapreduce import worker, utils, manifest
 
 if __name__ == '__main__':
     apps = []
+    env = os.environ.copy()
     for i in range(0, manifest.WORKER_NUM):
         port = manifest.BASE_PORT + i
-        apps.append({
-            "cmd": "python",
-            "args" : "-u -m mapreduce.worker %d" % (port, ),
-            "env" : os.environ.copy(),})
-
-    arbiter = get_arbiter(apps)
+        proc = subprocess.Popen(args=["python", "-u", "-m", "mapreduce.worker", str(port)],
+                                stdout=sys.stdout,
+                                stderr=sys.stderr,
+                                env=env,
+                                encoding="utf-8")
+        apps.append(proc)
 
     try:
-        arbiter.start()
+        for app in apps:
+            app.wait()
     finally:
-        arbiter.stop()
-        #print("worker %d listen on %s" % (i, utils.worker_url(i)))
+        print("stoped!")
+        map(lambda app: app.kill(), apps)
