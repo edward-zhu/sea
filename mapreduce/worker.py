@@ -16,7 +16,6 @@ import os
 import bz2
 import io
 import threading
-import heapq
 from concurrent.futures import ThreadPoolExecutor
 from collections import defaultdict
 from operator import itemgetter
@@ -221,6 +220,7 @@ def main():
 if __name__ == "__main__":
     import sys
     app = make_worker_app()
-    port = 8080 if len(sys.argv) == 1 else sys.argv[1]
+    port = 8080 if len(sys.argv) == 1 else int(sys.argv[1])
     app.listen(port)
+    print("worker %d listen on %s" % (port, utils.worker_url(port - manifest.BASE_PORT)))
     IOLoop.current().start()
