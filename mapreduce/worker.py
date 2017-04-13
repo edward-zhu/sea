@@ -15,6 +15,7 @@ import subprocess
 import os
 import bz2
 import io
+import signal
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from collections import defaultdict
@@ -217,10 +218,29 @@ def main():
     print(res)
     IOLoop.instance().stop()
 
+def shutdown():
+    serv.stop()
+    print("server stopped.")
+    ioloop = IOLoop.instance()
+    ioloop.stop()
+    print("ioloop stopped")
+
+def sigterm_hdl(signo, stack):
+    print("got stop signal %d" % (signo, ))
+    ioloop = IOLoop.instance()
+    ioloop.add_callback(shutdown)
+
 if __name__ == "__main__":
     import sys
+    signal.signal(signal.SIGTERM, sigterm_hdl)
+    signal.signal(signal.SIGTSTP, sigterm_hdl)
+    signal.signal(signal.SIGINT, sigterm_hdl)
     app = make_worker_app()
     port = 8080 if len(sys.argv) == 1 else int(sys.argv[1])
-    app.listen(port)
+    global serv
+    serv = app.listen(port, max_body_size=1073741824)
     print("worker %d listen on %s" % (port, utils.worker_url(port - manifest.BASE_PORT)))
     IOLoop.current().start()
+
+    print("exited")
+    sys.exit(0)
