@@ -148,7 +148,7 @@ def runReducer(exec_file, input_data, output_path, reducer_ix):
     output_file = os.path.join(output_path, "%d.out" % reducer_ix)
     err_file = os.path.join(output_path, "%d.err" % reducer_ix)
     f = open(output_file, "wb")
-    ef = open(output_file, "wb")
+    ef = open(err_file, "wb")
     proc = subprocess.Popen([exec_file], stdin=subprocess.PIPE, stdout=f, stderr=ef, env=env)
 
     proc.stdin.write(input_data)
@@ -235,10 +235,13 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, sigterm_hdl)
     signal.signal(signal.SIGTSTP, sigterm_hdl)
     signal.signal(signal.SIGINT, sigterm_hdl)
+
+    AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
+
     app = make_worker_app()
     port = 8080 if len(sys.argv) == 1 else int(sys.argv[1])
     global serv
-    serv = app.listen(port, max_body_size=1073741824)
+    serv = app.listen(port)
     print("worker %d listen on %s" % (port, utils.worker_url(port - manifest.BASE_PORT)))
     IOLoop.current().start()
 

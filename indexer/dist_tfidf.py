@@ -3,7 +3,7 @@ import pickle
 from scipy.sparse import spdiags
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from assignment2.utils.tokenizer import StemTokenizer
+from search.utils.tokenizer import StemTokenizer
 
 class DistTFIDFVectorizer(TfidfVectorizer):
     """customed TFIDF Vectorizer"""

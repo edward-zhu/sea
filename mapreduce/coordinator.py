@@ -27,6 +27,7 @@ def parse_args():
 
 class Coordinator:
     def __init__(self, mapper_path, reducer_path, input_path, output_path, num_reducers):
+        AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
         self.mapper_path = mapper_path
         self.reducer_path = reducer_path
         #self.job_path = job_path
@@ -41,7 +42,7 @@ class Coordinator:
         files = []
         for path in self.input_path:
             # fs = list(filter(lambda x: x[-3:] in [".in", ".in.bz2"], os.listdir(path)))
-            fs = os.listdir(path)
+            fs = os.listdir(path.strip())
             fs = map(lambda x: os.path.join(path, x), fs)
             files.extend(fs)
             #files = os.listdir(self.input_path)
@@ -53,6 +54,7 @@ class Coordinator:
                                   mapper_path=self.mapper_path,
                                   input_file=f,
                                   num_reducers=self.num_reducers) for i, f in enumerate(files)]
+        print(urls)
         return [cli.fetch(url, request_timeout=6000) for url in urls]
 
     def _get_reduce_reqs(self, cli, map_task_ids):
@@ -110,7 +112,8 @@ class Coordinator:
 @coroutine
 def main(args):
     '''main func'''
-    c = Coordinator(args.mapper_path, args.reducer_path, args.input_path.split(','), args.output_path, args.num_reducers)
+    paths = [p.strip() for p in args.input_path.split(',')]
+    c = Coordinator(args.mapper_path, args.reducer_path, paths, args.output_path, args.num_reducers)
     err = yield c.run()
     print(err)
     IOLoop.instance().stop()

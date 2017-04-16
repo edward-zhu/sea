@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 from mapreduce import manifest
+from urllib.parse import quote
 
 WORKER_URLS = None
 
@@ -43,6 +44,6 @@ def gen_req_url(base, method, **kwargs):
         else:
             raise TypeError("Unsupport type:" + str(type(kwargs[k])))
 
-    params = ["%s=%s" % (k, v) for k, v in kwargs.items()]
+    params = ["%s=%s" % (k, quote(v)) for k, v in kwargs.items()]
 
     return "%s/%s?%s" % (base, method, "&".join(params))

@@ -5,16 +5,18 @@ import pickle
 import json
 import numpy as np
 import nltk.data
+import os
 
 from functools import reduce
 from operator import itemgetter
 from itertools import count
 from scipy.sparse import csr_matrix, vstack, hstack
 
-from assignment4.dist_tfidf import DistTFIDFVectorizer
-from assignment2.manifest import TITLE_BONUS
+from indexer.dist_tfidf import DistTFIDFVectorizer
+from search.manifest import TITLE_BONUS
 
-idf_file = "assignment4/idf_jobs/0.out" if len(sys.argv) != 2 else sys.argv[1]
+
+idf_file = os.environ.get("IDF_FILE", default="indexer/idf_jobs/0.out")
 vec = DistTFIDFVectorizer(idf_file)
 
 sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')

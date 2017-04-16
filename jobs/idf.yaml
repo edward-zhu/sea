@@ -1,0 +1,15 @@
+name : invindex
+tasks:
+  - spec : mapreduce
+    mapper_path : indexer/mr_apps/idf_mapper.py
+    reducer_path : indexer/mr_apps/idf_reducer.py
+    input_path : "/data/jz2653/serval-data/invindex_out/0,\
+                  /data/jz2653/serval-data/invindex_out/1,\
+                  /data/jz2653/serval-data/invindex_out/2,\
+                  /data/jz2653/serval-data/invindex_out/3,\
+                  /data/jz2653/serval-data/invindex_out/4,\
+                  /data/jz2653/serval-data/invindex_out/5,\
+                  /data/jz2653/serval-data/invindex_out/6,\
+                  /data/jz2653/serval-data/invindex_out/7"
+    output_path : /data/jz2653/serval-data/idf_out
+    num_reducers : 1
