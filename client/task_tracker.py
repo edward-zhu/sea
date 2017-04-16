@@ -21,6 +21,7 @@ from tornado.ioloop import IOLoop, PeriodicCallback
 from client.reformat_task import ReformatTask
 from client.mapreduce_task import MapreduceTask
 from client.task import Task
+from client.integrate_task import IntegrateTask
 
 
 def _parse_args(_task, raw_args):
@@ -199,6 +200,7 @@ def make_tracker_app(port, job_tracker):
     tracker = TaskTracker(job_tracker, {
         'reformat' : ReformatTask,
         'mapreduce' : MapreduceTask,
+        'integrate' : IntegrateTask,
     })
     app = Application([
         (r'/status', GetStatusHandler),

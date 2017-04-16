@@ -10,11 +10,12 @@ import os
 import pickle
 import argparse
 import multiprocessing
+import bz2
 
 from indexer.dist_tfidf import DistTFIDFVectorizer
 
 
-def gen(doc_out, invindex_out, output_path, doc_prefix, invindex_prefix, pid):
+def gen(doc_out, invindex_out, output_path, doc_prefix, invindex_prefix, idf_path, pid):
     """generate binary invindex and doc_rep for one parition"""
     doc_data = None
     with open(doc_out, 'rb') as doc_f:
@@ -26,21 +27,22 @@ def gen(doc_out, invindex_out, output_path, doc_prefix, invindex_prefix, pid):
     for term, docs in inv_iter:
         invindex[term] = [int(x.split(':')[0]) for x in docs.split(',')]
     inv_f.close()
-    doc_path = os.path.join(output_path, "%s_%d.pkl" % (doc_prefix, pid))
-    invidx_path = os.path.join(output_path, "%s_%d.pkl" % (invindex_prefix, pid))
-    with open(invidx_path, 'wb') as f:
+    doc_path = os.path.join(output_path, "%s_%d.pkl.bz2" % (doc_prefix, pid))
+    invidx_path = os.path.join(output_path, "%s_%d.pkl.bz2" % (invindex_prefix, pid))
+    with bz2.open(invidx_path, 'wb') as f:
         pickle.dump({
             "doc_rep" : doc_data["doc_reps"],
             "doc_invidx" : invindex,
             "id2repid" : doc_data["id2repid"]
         }, f)
 
-    with open(doc_path, 'wb') as f:
+    with bz2.open(doc_path, 'wb') as f:
         pickle.dump(doc_data["docs"], f)
 
     tfidf_path = os.path.join(output_path, "tfidf.pkl")
-    idf_file = "assignment4/idf_jobs/0.out"
-
+    #idf_file = "assignment4/idf_jobs/0.out"
+    idf_file = idf_path
+    
     with open(tfidf_path, 'wb') as f:
         vec = DistTFIDFVectorizer(idf_file)
         pickle.dump(vec, f)
@@ -61,19 +63,22 @@ def parse_args():
     parser.add_argument("--inv_prefix",
                         help="invindex output prefix", default="indexes")
     parser.add_argument("nparts", type=int, help="partition number")
+    parser.add_argument("--idf_path",
+                        help="idf_file path", default="assignment4/output/")
 
     return parser.parse_args()
 
-def integrate(doc_out, invindex_out,output_path, doc_prefix, invindex_prefix, n_part):
+def integrate(doc_out, invindex_out,output_path, doc_prefix, invindex_prefix, idf_path, n_part):
     procs = []
     for i in range(0, n_part):
         procs.append(multiprocessing.Process(
             target=gen,
             args=(doc_out % i, invindex_out % i,
-                  output_path, doc_prefix, invindex_prefix, i)))
+                  output_path, doc_prefix, invindex_prefix, idf_path, i)))
         procs[i].start()
     for p in procs:
         p.join()
+    return 'ok'
 
 if __name__ == '__main__':
     args = parse_args()
