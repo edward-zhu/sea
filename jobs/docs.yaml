@@ -1,0 +1,50 @@
+name : docs
+tasks:
+  - spec : mapreduce
+    mapper_path : indexer/mr_apps/docs_mapper.py
+    reducer_path : indexer/mr_apps/docs_reducer.py
+    input_path : /data/jz2653/serval-data/0
+    output_path : /data/jz2653/serval-data/docs_out/0
+    num_reducers : 8
+  - spec : mapreduce
+    mapper_path : indexer/mr_apps/docs_mapper.py
+    reducer_path : indexer/mr_apps/docs_reducer.py
+    input_path : /data/jz2653/serval-data/1
+    output_path : /data/jz2653/serval-data/docs_out/1
+    num_reducers : 8
+  - spec : mapreduce
+    mapper_path : indexer/mr_apps/docs_mapper.py
+    reducer_path : indexer/mr_apps/docs_reducer.py
+    input_path : /data/jz2653/serval-data/2
+    output_path : /data/jz2653/serval-data/docs_out/2
+    num_reducers : 8
+  - spec : mapreduce
+    mapper_path : indexer/mr_apps/docs_mapper.py
+    reducer_path : indexer/mr_apps/docs_reducer.py
+    input_path : /data/jz2653/serval-data/3
+    output_path : /data/jz2653/serval-data/docs_out/3
+    num_reducers : 8
+  - spec : mapreduce
+    mapper_path : indexer/mr_apps/docs_mapper.py
+    reducer_path : indexer/mr_apps/docs_reducer.py
+    input_path : /data/jz2653/serval-data/4
+    output_path : /data/jz2653/serval-data/docs_out/4
+    num_reducers : 8
+  - spec : mapreduce
+    mapper_path : indexer/mr_apps/docs_mapper.py
+    reducer_path : indexer/mr_apps/docs_reducer.py
+    input_path : /data/jz2653/serval-data/5
+    output_path : /data/jz2653/serval-data/docs_out/5
+    num_reducers : 8
+  - spec : mapreduce
+    mapper_path : indexer/mr_apps/docs_mapper.py
+    reducer_path : indexer/mr_apps/docs_reducer.py
+    input_path : /data/jz2653/serval-data/6
+    output_path : /data/jz2653/serval-data/docs_out/6
+    num_reducers : 8
+  - spec : mapreduce
+    mapper_path : indexer/mr_apps/docs_mapper.py
+    reducer_path : indexer/mr_apps/docs_reducer.py
+    input_path : /data/jz2653/serval-data/7
+    output_path : /data/jz2653/serval-data/docs_out/7
+    num_reducers : 8
