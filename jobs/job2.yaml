@@ -1,8 +1,10 @@
 name : test
 tasks:
-  - spec : reformat
-    urls : http://localhost:8000/info_ret.xml.bz
-    job_path : data/
-    n_part : 4
-    n_group : 2
-    start_gid : 0
+  - spec : integrate
+    doc_result : data/doc_job/%d.out
+    inv_result : data/invindex_job/%d.out
+    out_path : data/output
+    doc_prefix : docs
+    inv_prefix : indexes
+    idf_path : data/idf_job/0.out
+    nparts : 4

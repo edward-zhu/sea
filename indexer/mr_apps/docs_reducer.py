@@ -17,6 +17,7 @@ from search.manifest import TITLE_BONUS
 
 
 idf_file = os.environ.get("IDF_FILE", default="indexer/idf_jobs/0.out")
+print(idf_file)
 vec = DistTFIDFVectorizer(idf_file)
 
 sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
