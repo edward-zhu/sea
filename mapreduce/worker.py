@@ -35,9 +35,15 @@ env = os.environ.copy()
 executor = ThreadPoolExecutor()
 
 def decompress(input_file, pipe):
-    f = bz2.open(input_file, "r")
-    for line in f:
-        pipe.write(line)
+    with bz2.open(input_file, "r") as f:
+        for line in f:
+            pipe.write(line)
+    pipe.close()
+
+def compress(output_file, pipe):
+    with bz2.open(output_file, "w") as f:
+        for line in pipe:
+            f.write(line)
     pipe.close()
 
 def runMapper(exec_file, input_file, num_reducers):
@@ -145,18 +151,29 @@ def gen_map_requests(rix, cli, ids):
 from functools import reduce
 
 def runReducer(exec_file, input_data, output_path, reducer_ix):
-    output_file = os.path.join(output_path, "%d.out" % reducer_ix)
     err_file = os.path.join(output_path, "%d.err" % reducer_ix)
-    f = open(output_file, "wb")
     ef = open(err_file, "wb")
-    proc = subprocess.Popen([exec_file], stdin=subprocess.PIPE, stdout=f, stderr=ef, env=env)
+
+    f = None
+
+    if manifest.COMPRESS_OUTPUT:
+        output_file = os.path.join(output_path, "%d.out.bz2" % reducer_ix)
+        proc = subprocess.Popen([exec_file],
+                                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=ef, env=env)
+        threading.Thread(target=compress, args=(output_file, proc.stdout)).start()
+    else:
+        output_file = os.path.join(output_path, "%d.out" % reducer_ix)
+        f = open(output_file, "wb")
+        proc = subprocess.Popen([exec_file], stdin=subprocess.PIPE, stdout=f, stderr=ef, env=env)
 
     proc.stdin.write(input_data)
     proc.stdin.close()
 
     ret = proc.wait()
 
-    f.close()
+    if f is not None:
+        f.close()
+
     ef.close()
 
     return ret
