@@ -10,8 +10,8 @@ from tornado.web import RequestHandler, Application
 from tornado.httpclient import AsyncHTTPClient
 from tornado.gen import coroutine
 
-from assignment2 import manifest
-from assignment3.utils import hashf
+from search import manifest
+from mapreduce.utils import hashf
 
 
 class MainHandler(RequestHandler):
@@ -77,7 +77,8 @@ class QueryHandler(RequestHandler):
 
         docs = yield self.__fetch_docs(indexes, q)
 
-        docs = [docs[x[0]] for x in indexes]
+        docs = [dict(docs[x[0]], score=x[1]) for x in indexes]
+    
         cost = time.time() - begin
         print("[FRONT END] doc cost %.4fs." % cost)
         self.write({"results":docs, "num_results": len(docs)})

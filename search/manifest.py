@@ -2,13 +2,18 @@
 # encoding: utf-8
 
 # server settings
+import os
 
-N_INDEX_SRV = 8
-N_DOC_SRV = 8
+N_INDEX_SRV = 4
+N_DOC_SRV = 4
 
-FRONTEND = "http://127.0.0.1:9021/"
+BASE_PORT = os.environ["BASE_PORT"] #need to be exported
+FRONT_PORT = os.environ["FRONT_PORT"] #need to be exported
+
+FRONTEND = "http://127.0.0.1:"+FRONT_PORT+"/"
 
 MULTIPROCESS = False
+
 
 '''
 INDEX_SRV = [
@@ -24,8 +29,14 @@ DOC_SRV = [
 ]
 '''
 
-INDEX_SRV = [
-    "http://localhost:22000/",
+
+
+INDEX_SRV = []
+
+for i in range(0,4):
+    temp = int(BASE_PORT)+i
+    INDEX_SRV.append("http://localhost:"+str(temp)+"/")
+''' "http://localhost:22000/",
     "http://localhost:22001/",
     "http://localhost:22002/",
     "http://localhost:22003/",
@@ -33,22 +44,26 @@ INDEX_SRV = [
     "http://localhost:22005/",
     "http://localhost:22006/",
     "http://localhost:22007/",
-]
+]'''
 
-DOC_SRV = [
-    "http://localhost:23000/",
+DOC_SRV = []
+for i in range(0,4):
+    temp = int(BASE_PORT)+i+1000
+    DOC_SRV.append("http://localhost:"+str(temp)+"/")
+''' "http://localhost:23000/",
     "http://localhost:23001/",
     "http://localhost:23002/",
     "http://localhost:23003/",
     "http://localhost:23004/",
     "http://localhost:23005/",
     "http://localhost:23006/",
-    "http://localhost:23007/",
-]
+    "http://localhost:23007/",'''
 
 # data settings
 
-DATA_DIR = "./data"
+
+
+DATA_DIR = os.environ["SEARCH_DATA_DIR"] #need to be expoerted
 INDEX_PREFIX = "indexes"
 DOC_PREFIX = "docs"
 TFIDF_FILE = "tfidf.pkl"
@@ -76,9 +91,9 @@ def get_tfidf():
 def get_index_data(srvid):
     if (srvid > N_INDEX_SRV):
         raise (KeyError())
-    return os.path.join(DATA_DIR, INDEX_PREFIX + "_%d.pkl" % srvid)
+    return os.path.join(DATA_DIR, INDEX_PREFIX + "_%d.pkl.bz2" % srvid)
 
 def get_doc_data(srvid):
     if (srvid > N_DOC_SRV):
         raise (KeyError())
-    return os.path.join(DATA_DIR, DOC_PREFIX + "_%d.pkl" % srvid)
+    return os.path.join(DATA_DIR, DOC_PREFIX + "_%d.pkl.bz2" % srvid)

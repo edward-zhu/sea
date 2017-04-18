@@ -4,6 +4,7 @@
 import os
 import pickle
 import time
+import bz2
 
 from tornado.web import RequestHandler, Application
 from tornado.ioloop import IOLoop
@@ -11,8 +12,8 @@ from tornado.ioloop import IOLoop
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from utils.tokenizer import StemTokenizer, SimpleTokenizer
-import manifest
+from search.utils.tokenizer import StemTokenizer, SimpleTokenizer
+import search.manifest as manifest
 
 class Scorer:
     def __init__(self, _tfidf, doc_reps, doc_invidx,
@@ -83,7 +84,7 @@ class Scorer:
 
 def make_scorer(srvid):
     tfidf = pickle.load(open(manifest.get_tfidf(), "rb"))
-    data = pickle.load(open(manifest.get_index_data(srvid), "rb"))
+    data = pickle.load(bz2.open(manifest.get_index_data(srvid), "rb"))
     id2repid = None if 'id2repid' not in data else data["id2repid"]
     return Scorer(tfidf, data["doc_rep"], data["doc_invidx"],
                   manifest.N_INDEX_SRV, id2repid=id2repid)

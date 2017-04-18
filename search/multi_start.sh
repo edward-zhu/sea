@@ -1,0 +1,1 @@
+sh -x search/start_multi.sh & sh -x search/start_multi2.sh

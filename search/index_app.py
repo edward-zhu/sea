@@ -4,8 +4,8 @@
 from tornado.web import RequestHandler, Application
 from tornado.ioloop import IOLoop
 
-import manifest
-from scorer import make_scorer
+import search.manifest as manifest
+from search.scorer import make_scorer
 
 class QueryHandler(RequestHandler):
     def initialize(self, scorer):

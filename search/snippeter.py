@@ -11,8 +11,8 @@ from functools import reduce
 
 from nltk.tokenize import RegexpTokenizer
 
-import manifest
-from utils.tokenizer import SimpleTokenizer, StemTokenizer, SideEffectTokenizer
+import search.manifest as manifest
+from search.utils.tokenizer import SimpleTokenizer, StemTokenizer, SideEffectTokenizer
 
 class Snippeter:
     def __init__(self, tfidf, docs, srvid, simple_tokenize=SimpleTokenizer()):

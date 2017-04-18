@@ -12,10 +12,10 @@ from tornado.process import fork_processes
 import socket
 import re
 
-import manifest
-from frontend_app import make_frontend_app
-from index_app import make_index_app
-from doc_app import make_doc_app
+import search.manifest as manifest
+from search.frontend_app import make_frontend_app
+from search.index_app import make_index_app
+from search.doc_app import make_doc_app
 
 index_apps = {}
 doc_apps = {}

@@ -5,9 +5,10 @@ from tornado.web import RequestHandler, Application
 from tornado.ioloop import IOLoop
 import pickle
 import os
+import bz2
 
-from snippeter import Snippeter
-import manifest
+from search.snippeter import Snippeter
+import search.manifest as manifest
 
 class QueryHandler(RequestHandler):
     def initialize(self, docs, snippeter):
@@ -39,7 +40,7 @@ class QueryHandler(RequestHandler):
         })
 
 def make_doc_app(srvid):
-    docs = pickle.load(open(os.path.join(manifest.DATA_DIR, "docs_%d.pkl" % srvid), "rb"))
+    docs = pickle.load(bz2.open(os.path.join(manifest.DATA_DIR, "docs_%d.pkl.bz2" % srvid), "rb"))
     tfidf = pickle.load(open(os.path.join(manifest.DATA_DIR, "tfidf.pkl"), "rb"))
     snippeter = Snippeter(tfidf, docs, srvid)
     app = Application([
