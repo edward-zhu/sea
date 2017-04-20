@@ -8,8 +8,11 @@ from functools import reduce
 from tornado.escape import url_escape
 from tornado.web import RequestHandler, Application
 from tornado.httpclient import AsyncHTTPClient
+from tornado.ioloop import IOLoop, PeriodicCallback
 from tornado.gen import coroutine
 from master import manifest
+
+ht = None
 
 class Host:
     def __init__(self, host):
@@ -31,32 +34,46 @@ class HostTracker:
 
     def __init__(self):
         self._hosts = manifest.FRONT_ENDS  # initially no host is visible or available
-        #self._ioloop = IOLoop.current()
+        self._ioloop = None
 
     def check_heartbeat(self):
         for host in self._hosts:
             if host.since_last_hbt() > self.HBT_DEADLINE:
                 self._hosts.remove(host)
+                print("%s lost connections" % host.host)
+        self.show_hosts()
 
     def add_host(self, host):
         h = Host(host)
         self._hosts.append(h)
         print("Add new host %s" % host)
 
+    def find_index(self, host):
+        for i in range(len(self._hosts)):
+            if self._hosts[i].host == host:
+                return i
+        return -1
+
     def heartbeat_received(self, host):
-        if host in self._hosts:
-            self._hosts[host].update_hbt()
+        if host in self.return_hosts():
+            i = self.find_index(host)
+            self._hosts[i].update_hbt()
             return
 
         self.add_host(host)
 
     def return_hosts(self):
-        hosts = [host for host in self._hosts]
+        hosts = [host.host for host in self._hosts]
         return hosts
 
+    def show_hosts(self):
+        hosts = [host.host for host in self._hosts]
+        print(hosts)
 
-#tracker = None
-ht = HostTracker()
+    def setup(self):
+        self._ioloop = IOLoop.current()
+        self.hbt_timer = PeriodicCallback(self.check_heartbeat, HostTracker.HBT_DEADLINE * 1000)
+        self.hbt_timer.start()
 
 class HeartbeatReqHandler(RequestHandler):
     @coroutine
@@ -107,11 +124,15 @@ class QueryHandler(RequestHandler):
         self.write({"results": results, "num_results": len(results)})
 
 def make_master_app():
-    return Application([
+    global ht
+    ht = HostTracker()
+    app = Application([
         (r"/", MainHandler),
         (r"/search", QueryHandler),
         (r'/heartbeat', HeartbeatReqHandler),
     ], template_path="static/")
+    ht.setup()
+    return app
 
 if __name__ == '__main__':
     import tornado.ioloop
