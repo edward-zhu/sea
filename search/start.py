@@ -37,7 +37,7 @@ def _send_req(req, retry=False):
     delay = 1
     while True:
         try:
-            print("req: ", MASTER_TRACKER + req)
+            print("req: ", MASTER_TRACKER + req,"&doc_id:",manifest.DATA_DIR)
             ret = yield http_cli.fetch(MASTER_TRACKER + req)
         except Exception as e:
             if retry and delay < TRUNCATED_SEC:
