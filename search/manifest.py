@@ -25,7 +25,9 @@ for i in range(0, N_DOC_SRV):
     DOC_SRV.append("http://localhost:"+str(temp)+"/")
 
 # data settings
-DATA_DIR = os.environ.get("SEARCH_DATA_DIR", "data/0") #need to be expoerted
+DATA_FOLDER = os.environ.get("SEARCH_DATA_FOLDER", "data/") #need to be expoerted
+DATA_ID = os.environ.get("SEARCH_DATA_ID", "0") #need to be exported
+DATA_DIR = os.path.join(DATA_FOLDER, DATA_ID)
 INDEX_PREFIX = "indexes"
 DOC_PREFIX = "docs"
 TFIDF_FILE = "tfidf.pkl"
