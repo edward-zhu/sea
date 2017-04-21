@@ -10,7 +10,7 @@ from tornado.gen import coroutine
 from client.task import Task
 from mapreduce.coordinator import Coordinator
 
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 '''
 Tasks:
@@ -19,7 +19,7 @@ Tasks:
 '''
 
 class MapreduceTask(Task):
-    executor = ProcessPoolExecutor()
+    executor = ThreadPoolExecutor()
 
     '''Call Coordinator to do mapreduce jobs'''
     @coroutine

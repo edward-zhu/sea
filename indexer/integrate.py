@@ -17,10 +17,19 @@ from indexer.dist_tfidf import DistTFIDFVectorizer
 
 def gen(doc_out, invindex_out, output_path, doc_prefix, invindex_prefix, idf_path, pid):
     """generate binary invindex and doc_rep for one parition"""
+
     doc_data = None
-    with open(doc_out, 'rb') as doc_f:
-        doc_data = pickle.load(doc_f)
-    inv_f = open(invindex_out, 'r')
+    if doc_out[-4:] == ".bz2":
+        with bz2.open(doc_out, 'rb') as doc_f:
+            doc_data = pickle.load(doc_f)
+    else:
+        with open(doc_out, 'rb') as doc_f:
+            doc_data = pickle.load(doc_f)
+
+    if invindex_out[-4:] == ".bz2":
+        inv_f = bz2.open(invindex_out, 'rt')
+    else:
+        inv_f = open(invindex_out, 'r')
 
     inv_iter = map(lambda x: x.strip().split('\t'), filter(lambda x: x[0] != '#', inv_f))
     invindex = {}
@@ -42,7 +51,7 @@ def gen(doc_out, invindex_out, output_path, doc_prefix, invindex_prefix, idf_pat
     tfidf_path = os.path.join(output_path, "tfidf.pkl")
     #idf_file = "assignment4/idf_jobs/0.out"
     idf_file = idf_path
-    
+
     with open(tfidf_path, 'wb') as f:
         vec = DistTFIDFVectorizer(idf_file)
         pickle.dump(vec, f)

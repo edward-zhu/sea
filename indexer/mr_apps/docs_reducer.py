@@ -13,7 +13,7 @@ from itertools import count
 from scipy.sparse import csr_matrix, vstack, hstack
 
 from indexer.dist_tfidf import DistTFIDFVectorizer
-from search.manifest import TITLE_BONUS
+from indexer.manifest import TITLE_BONUS
 
 
 idf_file = os.environ.get("IDF_FILE", default="indexer/idf_jobs/0.out")
@@ -33,9 +33,10 @@ docs, doc_reps, id2repid = {}, [], {}
 
 doc_batch = []
 title_batch = []
+title_len_batch = []
 id_batch = []
 
-BATCH_SIZE = 1000
+BATCH_SIZE = 2000
 
 data = map(lambda x: x.strip().split('\t')[1], sys.stdin)
 for doc, i in zip(data, count()):
@@ -49,28 +50,29 @@ for doc, i in zip(data, count()):
 
     doc_batch.append(doc_data["doc"])
     title_batch.append(doc_data["metadata"]["title"])
+    title_len_batch.append((10 / len(doc_data["metadata"]["title"].split(" ")))**2)
     id_batch.append([doc_id])
 
     if i % BATCH_SIZE == BATCH_SIZE - 1:
         dr = vec.transform(doc_batch)
         tr = vec.transform(title_batch)
-        dr = dr + tr * TITLE_BONUS
+        tl = np.array(title_len_batch)
+        dr = dr + (tr * TITLE_BONUS).multiply(tl.reshape(-1, 1))
         doc_rep = hstack((np.array(id_batch), dr))
         doc_reps.append(doc_rep)
-        doc_batch, title_batch, id_batch = [], [], []
+        doc_batch, title_batch, title_len_batch, id_batch = [], [], [], []
     id2repid[doc_id] = i
 
 if len(doc_batch) > 0:
     dr = vec.transform(doc_batch)
     tr = vec.transform(title_batch)
-    dr = dr + tr * TITLE_BONUS
+    tl = np.array(title_len_batch)
+    dr = dr + (tr * TITLE_BONUS).multiply(tl.reshape(-1, 1))
     doc_rep = hstack((np.array(id_batch), dr))
     doc_reps.append(doc_rep)
-    doc_batch, title_batch, id_batch = [], [], []
 
 pickle.dump({
     "docs" : docs,
     "doc_reps" : vstack(doc_reps, 'csr'),
     "id2repid" : id2repid
 }, sys.stdout.buffer)
-

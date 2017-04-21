@@ -4,73 +4,30 @@
 # server settings
 import os
 
-N_INDEX_SRV = 4
-N_DOC_SRV = 4
+N_INDEX_SRV = 8
+N_DOC_SRV = 8
 
-BASE_PORT = os.environ["BASE_PORT"] #need to be exported
-FRONT_PORT = os.environ["FRONT_PORT"] #need to be exported
-
-FRONTEND = "http://127.0.0.1:"+FRONT_PORT+"/"
+BASE_PORT = int(os.environ.get("BASE_PORT", default="24000")) #need to be exported
+FRONT_PORT = int(os.environ.get("FRONT_PORT", default="22333")) #need to be exported
+FRONTEND = "http://localhost:%d/" % (FRONT_PORT, )
 
 MULTIPROCESS = False
 
-
-'''
-INDEX_SRV = [
-    "http://linserv2.cims.nyu.edu:35315/",
-    "http://linserv2.cims.nyu.edu:35316/",
-    "http://linserv2.cims.nyu.edu:35317/",
-]
-
-DOC_SRV = [
-    "http://linserv2.cims.nyu.edu:35318/",
-    "http://linserv2.cims.nyu.edu:35319/",
-    "http://linserv2.cims.nyu.edu:35320/",
-]
-'''
-
-
-
 INDEX_SRV = []
-
-for i in range(0,4):
+for i in range(0, N_INDEX_SRV):
     temp = int(BASE_PORT)+i
     INDEX_SRV.append("http://localhost:"+str(temp)+"/")
-''' "http://localhost:22000/",
-    "http://localhost:22001/",
-    "http://localhost:22002/",
-    "http://localhost:22003/",
-    "http://localhost:22004/",
-    "http://localhost:22005/",
-    "http://localhost:22006/",
-    "http://localhost:22007/",
-]'''
 
 DOC_SRV = []
-for i in range(0,4):
+for i in range(0, N_DOC_SRV):
     temp = int(BASE_PORT)+i+1000
     DOC_SRV.append("http://localhost:"+str(temp)+"/")
-''' "http://localhost:23000/",
-    "http://localhost:23001/",
-    "http://localhost:23002/",
-    "http://localhost:23003/",
-    "http://localhost:23004/",
-    "http://localhost:23005/",
-    "http://localhost:23006/",
-    "http://localhost:23007/",'''
 
 # data settings
-
-
-
-DATA_DIR = os.environ["SEARCH_DATA_DIR"] #need to be expoerted
+DATA_DIR = os.environ.get("SEARCH_DATA_DIR", "data/0") #need to be expoerted
 INDEX_PREFIX = "indexes"
 DOC_PREFIX = "docs"
 TFIDF_FILE = "tfidf.pkl"
-
-# scorer settings
-
-TITLE_BONUS = 100
 
 # query settings
 

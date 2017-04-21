@@ -33,6 +33,11 @@ class WikipediaParser:
             title = elem.findtext(WikipediaParser.WIKI_NAMESPACE + 'title')
             rev = elem.find(WikipediaParser.WIKI_NAMESPACE + 'revision')
             doc = rev.findtext(WikipediaParser.WIKI_NAMESPACE + 'text')
+            if "Wikipedia:" in title:
+                continue
+            if "Template:" in title:
+                continue
+            
             metadata = {
                 "title": title,
                 "url": WikipediaParser.WIKI_URL_PREFIX + title.replace(" ", "_")

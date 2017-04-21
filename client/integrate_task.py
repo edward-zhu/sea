@@ -10,7 +10,7 @@ from tornado.gen import coroutine
 from client.task import Task
 from indexer import integrate
 
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 '''
 Tasks:
@@ -19,17 +19,15 @@ Tasks:
 '''
 
 class IntegrateTask(Task):
-    executor = ProcessPoolExecutor()
-
-  
+    executor = ThreadPoolExecutor(1)
 
     @coroutine
     def _run(self):
         self.set_running()
-        err = yield IntegrateTask.executor.submit(integrate.integrate, self.doc_result, self.inv_result,
-                                                                      self.out_path, self.doc_prefix, self.inv_prefix,
-                                                                      self.idf_path, self.nparts)
-                                                                     
+        err = yield IntegrateTask.executor.submit(
+            integrate.integrate, self.doc_result, self.inv_result,
+            self.out_path, self.doc_prefix, self.inv_prefix,
+            self.idf_path, self.nparts)
         if err == "ok":
             self.set_done()
             return

@@ -4,5 +4,5 @@ tasks:
     urls : http://ftp.acc.umu.se/mirror/wikimedia.org/dumps/enwiki/20170320/enwiki-20170320-pages-articles.xml.bz2
     job_path : /data/jz2653/serval-data/
     n_part : 8
-    n_group : 16
+    n_group : 8
     start_gid : 0

@@ -11,8 +11,8 @@ from operator import itemgetter, contains
 import numpy as np
 from scipy.sparse import csr_matrix
 
-MAX_DF = 0.9995
-MIN_DF = 0.0005
+MAX_DF = 1.0
+MIN_DF = 0.000001
 
 def check_and_get_union(_iter, key):
     _t, _g = next(_iter)

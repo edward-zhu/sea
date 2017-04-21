@@ -26,15 +26,17 @@ frontend_app = None
 def get_port(url):
     return int(re.findall(r':([0-9]+)', url)[0])
 
+def start_indexer(i):
+    port = get_port(manifest.INDEX_SRV[i])
+    index_apps[i] = make_index_app(i)
+    index_apps[i].listen(port)
+
 if __name__ == "__main__":
     host = socket.gethostname()
 
     index_sockets = [bind_sockets(get_port(x)) for x in manifest.INDEX_SRV]
     doc_sockets = [bind_sockets(get_port(x)) for x in manifest.DOC_SRV]
     frontend_socket = bind_sockets(get_port(manifest.FRONTEND))
-
-    if manifest.MULTIPROCESS:
-        fork_processes(4)
 
     for i in range(0, manifest.N_INDEX_SRV):
         port = get_port(manifest.INDEX_SRV[i])

@@ -1,66 +1,66 @@
 name : docs
 tasks:
   - spec : integrate
-    doc_result : /data/jz2653/serval-data/docs_out/0/%d.out
-    inv_result : /data/jz2653/serval-data/invindex_out/0/%d.out
+    doc_result : /data/jz2653/serval-data/docs_out/0/%d.out.bz2
+    inv_result : /data/jz2653/serval-data/invindex_out/0/%d.out.bz2
     out_path : /data/jz2653/serval-data/output/0
     doc_prefix : docs
     inv_prefix : indexes
-    idf_path : /data/jz2653/serval-data/output/idf_out/0.out
+    idf_path : /data/jz2653/serval-data/idf_out/0.out
     nparts : 8
   - spec : integrate
-    doc_result : /data/jz2653/serval-data/docs_out/1/%d.out
-    inv_result : /data/jz2653/serval-data/invindex_out/1/%d.out
+    doc_result : /data/jz2653/serval-data/docs_out/1/%d.out.bz2
+    inv_result : /data/jz2653/serval-data/invindex_out/1/%d.out.bz2
     out_path : /data/jz2653/serval-data/output/1
     doc_prefix : docs
     inv_prefix : indexes
-    idf_path : /data/jz2653/serval-data/output/idf_out/0.out
+    idf_path : /data/jz2653/serval-data/idf_out/0.out
     nparts : 8
   - spec : integrate
-    doc_result : /data/jz2653/serval-data/docs_out/2/%d.out
-    inv_result : /data/jz2653/serval-data/invindex_out/2/%d.out
+    doc_result : /data/jz2653/serval-data/docs_out/2/%d.out.bz2
+    inv_result : /data/jz2653/serval-data/invindex_out/2/%d.out.bz2
     out_path : /data/jz2653/serval-data/output/2
     doc_prefix : docs
     inv_prefix : indexes
-    idf_path : /data/jz2653/serval-data/output/idf_out/0.out
+    idf_path : /data/jz2653/serval-data/idf_out/0.out
     nparts : 8
   - spec : integrate
-    doc_result : /data/jz2653/serval-data/docs_out/3/%d.out
-    inv_result : /data/jz2653/serval-data/invindex_out/3/%d.out
+    doc_result : /data/jz2653/serval-data/docs_out/3/%d.out.bz2
+    inv_result : /data/jz2653/serval-data/invindex_out/3/%d.out.bz2
     out_path : /data/jz2653/serval-data/output/3
     doc_prefix : docs
     inv_prefix : indexes
-    idf_path : /data/jz2653/serval-data/output/idf_out/0.out
+    idf_path : /data/jz2653/serval-data/idf_out/0.out
     nparts : 8
   - spec : integrate
-    doc_result : /data/jz2653/serval-data/docs_out/4/%d.out
-    inv_result : /data/jz2653/serval-data/invindex_out/4/%d.out
+    doc_result : /data/jz2653/serval-data/docs_out/4/%d.out.bz2
+    inv_result : /data/jz2653/serval-data/invindex_out/4/%d.out.bz2
     out_path : /data/jz2653/serval-data/output/4
     doc_prefix : docs
     inv_prefix : indexes
-    idf_path : /data/jz2653/serval-data/output/idf_out/0.out
+    idf_path : /data/jz2653/serval-data/idf_out/0.out
     nparts : 8
   - spec : integrate
-    doc_result : /data/jz2653/serval-data/docs_out/5/%d.out
-    inv_result : /data/jz2653/serval-data/invindex_out/5/%d.out
+    doc_result : /data/jz2653/serval-data/docs_out/5/%d.out.bz2
+    inv_result : /data/jz2653/serval-data/invindex_out/5/%d.out.bz2
     out_path : /data/jz2653/serval-data/output/5
     doc_prefix : docs
     inv_prefix : indexes
-    idf_path : /data/jz2653/serval-data/output/idf_out/0.out
+    idf_path : /data/jz2653/serval-data/idf_out/0.out
     nparts : 8
   - spec : integrate
-    doc_result : /data/jz2653/serval-data/docs_out/6/%d.out
-    inv_result : /data/jz2653/serval-data/invindex_out/6/%d.out
+    doc_result : /data/jz2653/serval-data/docs_out/6/%d.out.bz2
+    inv_result : /data/jz2653/serval-data/invindex_out/6/%d.out.bz2
     out_path : /data/jz2653/serval-data/output/6
     doc_prefix : docs
     inv_prefix : indexes
-    idf_path : /data/jz2653/serval-data/output/idf_out/0.out
+    idf_path : /data/jz2653/serval-data/idf_out/0.out
     nparts : 8
   - spec : integrate
-    doc_result : /data/jz2653/serval-data/docs_out/7/%d.out
-    inv_result : /data/jz2653/serval-data/invindex_out/7/%d.out
+    doc_result : /data/jz2653/serval-data/docs_out/7/%d.out.bz2
+    inv_result : /data/jz2653/serval-data/invindex_out/7/%d.out.bz2
     out_path : /data/jz2653/serval-data/output/7
     doc_prefix : docs
     inv_prefix : indexes
-    idf_path : /data/jz2653/serval-data/output/idf_out/0.out
+    idf_path : /data/jz2653/serval-data/idf_out/0.out
     nparts : 8
