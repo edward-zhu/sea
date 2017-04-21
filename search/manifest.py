@@ -9,6 +9,7 @@ N_DOC_SRV = 4
 
 BASE_PORT = int(os.environ.get("BASE_PORT", default="24000")) #need to be exported
 FRONT_PORT = int(os.environ.get("FRONT_PORT", default="22333")) #need to be exported
+MASTER_TRACKER = os.environ.get("MASTER_TRACKER", default="http://172.17.81.95:11111")
 FRONTEND = "http://localhost:%d/" % (FRONT_PORT, )
 
 MULTIPROCESS = False
