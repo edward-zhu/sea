@@ -25,7 +25,7 @@ class MainHandler(RequestHandler):
             begin = time.time()
             reps = yield http_cli.fetch(manifest.FRONTEND + "search?q=" + url_escape(q))
             cost = time.time() - begin
-            results = json.loads(reps.body)
+            results = json.loads(str(reps.body, encoding="utf-8"))
             count = results["num_results"]
 
             self.render("result.html", cost=cost, count=count, results=results["results"])
@@ -36,7 +36,7 @@ class QueryHandler(RequestHandler):
         http_cli = AsyncHTTPClient()
         reqs = [isrv + "index?q=" + q for isrv in manifest.INDEX_SRV]
         reps = yield [http_cli.fetch(req) for req in reqs]
-        indexes = reduce(lambda x, y: x + json.loads(y.body)["postings"], reps, []);
+        indexes = reduce(lambda x, y: x + json.loads(str(y.body, encoding="utf-8"))["postings"], reps, []);
         indexes.sort(key=lambda x: x[1], reverse=True);
 
         return indexes
@@ -57,7 +57,7 @@ class QueryHandler(RequestHandler):
 
         reps = yield [http_cli.fetch(req) for req in reqs]
 
-        results = reduce(lambda x, y: x + json.loads(y.body)["results"], reps, [])
+        results = reduce(lambda x, y: x + json.loads(str(y.body, encoding="utf-8"))["results"], reps, [])
 
         docs = {}
         for r in results:
