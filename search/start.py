@@ -27,7 +27,7 @@ def get_port(url):
 
 def get_internal_ip():
     return socket.gethostbyname(socket.gethostname())
-    
+
 HOST = "http://%s:%d" % (get_internal_ip(), get_port(manifest.FRONTEND), )
 
 @coroutine    
@@ -62,9 +62,6 @@ count = 0
 
 host = socket.gethostname()
 
-def get_port(url):
-    return int(re.findall(r':([0-9]+)', url)[0])
-
 def start_index_app(i,queue):
     port = get_port(manifest.INDEX_SRV[i])
     app = make_index_app(i)
@@ -86,40 +83,36 @@ def start_frontend_app(queue):
     app = make_frontend_app()
     print("[FRONT SRV] listening on port %s:%d." % (host, port))
     app.listen(port)
-    
+
     count = 0
     while count < len(manifest.INDEX_SRV)+len(manifest.DOC_SRV):
         queue.get()
-        count+=1
+        count += 1
     PeriodicCallback(heartbeat, HEARTBEAT_INT).start()
     IOLoop.current().start()
 
 
 if __name__ == "__main__":
     queue = Queue()
-    
+
     for i in range(0, manifest.N_INDEX_SRV):
-        srv = Process(target=start_index_app, args=(i,queue,))
+        srv = Process(target=start_index_app, args=(i, queue,))
         srvs.append(srv)
-        
 
     for i in range(0, manifest.N_DOC_SRV):
-        srv = Process(target=start_doc_app, args=(i,queue,))
+        srv = Process(target=start_doc_app, args=(i, queue,))
         srvs.append(srv)
-        
-    frontend_srv =  Process(target=start_frontend_app, args=(queue,))
+
+    frontend_srv = Process(target=start_frontend_app, args=(queue, ))
     srvs.append(frontend_srv)
-    
-    
+
     for srv in srvs:
         srv.start()
-    
+
     try:
         for srv in srvs:
             srv.join()
     finally:
         print("program exit!")
         sys.exit(0)
-   
-    
-    
+

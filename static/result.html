@@ -73,8 +73,13 @@
             <div class="ui basic segment" id="result">
               <h3 class="ui header"><a href="{{ result["url"] }}">{{ result["title"] }}</a></h3>
               <p>{% raw result["snippet"] %}</p>
-            </di>
+            </div>
             {% end %}
+            <div class="ui basic buttons">
+              {% for page in pages %}
+              <div class="ui {% if page != cur_page %}basic{% end %} button">page</div>
+              {% end %}
+            </div>
           </div>
         </div>
       </div>
