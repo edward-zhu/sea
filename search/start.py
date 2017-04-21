@@ -3,7 +3,7 @@
 
 from tornado.httpclient import AsyncHTTPClient
 from tornado.ioloop import IOLoop,PeriodicCallback
-from multiprocessing import Process
+from multiprocessing import Process,Queue
 
 import re
 import socket
@@ -58,46 +58,56 @@ def heartbeat():
 
 
 srvs = []
+count = 0
 
 host = socket.gethostname()
 
 def get_port(url):
     return int(re.findall(r':([0-9]+)', url)[0])
 
-def start_index_app(i):
+def start_index_app(i,queue):
     port = get_port(manifest.INDEX_SRV[i])
     app = make_index_app(i)
+    queue.put(i)
     print("[INDEX SRV] #%d listening on %s:%d." % (i, host, port))
     app.listen(port)
     IOLoop.current().start()
 
-def start_doc_app(i):
+def start_doc_app(i,queue):
     port = get_port(manifest.DOC_SRV[i])
     app = make_doc_app(i)
     print("[DOC SRV] #%d listening on %s:%d." % (i, host, port))
+    queue.put(i+10)
     app.listen(port)
     IOLoop.current().start()
 
-def start_frontend_app():
+def start_frontend_app(queue):
     port = get_port(manifest.FRONTEND)
     app = make_frontend_app()
     print("[FRONT SRV] listening on port %s:%d." % (host, port))
     app.listen(port)
+    
+    count = 0
+    while count < len(manifest.INDEX_SRV)+len(manifest.DOC_SRV):
+        queue.get()
+        count+=1
     PeriodicCallback(heartbeat, HEARTBEAT_INT).start()
     IOLoop.current().start()
 
 
 if __name__ == "__main__":
+    queue = Queue()
+    
     for i in range(0, manifest.N_INDEX_SRV):
-        srv = Process(target=start_index_app, args=(i,))
+        srv = Process(target=start_index_app, args=(i,queue,))
         srvs.append(srv)
         
 
     for i in range(0, manifest.N_DOC_SRV):
-        srv = Process(target=start_doc_app, args=(i,))
+        srv = Process(target=start_doc_app, args=(i,queue,))
         srvs.append(srv)
         
-    frontend_srv = Process(target=start_frontend_app)
+    frontend_srv =  Process(target=start_frontend_app, args=(queue,))
     srvs.append(frontend_srv)
     
     

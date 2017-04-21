@@ -32,7 +32,7 @@ TFIDF_FILE = "tfidf.pkl"
 
 # query settings
 
-MAX_DOC_PER_QUERY = 10
+MAX_DOC_PER_QUERY = 100
 
 # snippeter settings
 
