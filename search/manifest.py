@@ -4,8 +4,8 @@
 # server settings
 import os
 
-N_INDEX_SRV = 4
-N_DOC_SRV = 4
+N_INDEX_SRV = 8
+N_DOC_SRV = 8
 
 BASE_PORT = int(os.environ.get("BASE_PORT", default="24000")) #need to be exported
 FRONT_PORT = int(os.environ.get("FRONT_PORT", default="22333")) #need to be exported
@@ -25,7 +25,7 @@ for i in range(0, N_DOC_SRV):
     DOC_SRV.append("http://localhost:"+str(temp)+"/")
 
 # data settings
-DATA_DIR = os.environ.get("SEARCH_DATA_DIR", "data/output1") #need to be expoerted
+DATA_DIR = os.environ.get("SEARCH_DATA_DIR", "data/0") #need to be expoerted
 INDEX_PREFIX = "indexes"
 DOC_PREFIX = "docs"
 TFIDF_FILE = "tfidf.pkl"
