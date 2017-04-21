@@ -4,6 +4,7 @@
 
 import json
 import time
+import math
 from functools import reduce
 from tornado.escape import url_escape
 from tornado.web import RequestHandler, Application
@@ -11,8 +12,10 @@ from tornado.httpclient import AsyncHTTPClient
 from tornado.ioloop import IOLoop, PeriodicCallback
 from tornado.gen import coroutine
 from master import manifest
+#from cachetools import LRUCache
 
 ht = None
+result_cache = {}
 
 class Host:
     def __init__(self, host):
@@ -86,12 +89,13 @@ class MainHandler(RequestHandler):
     @coroutine
     def get(self):
         q = self.get_argument("q", "")
+        page = int(self.get_argument("page", "0"))
         if q == "":
             self.render("index.html")
         else:
             http_client = AsyncHTTPClient()
             begin = time.time()
-            reps = yield http_client.fetch(manifest.MASTER + "/search?q=" + url_escape(q))
+            reps = yield http_client.fetch(manifest.MASTER + "/search?q=" + url_escape(q) + "&page=" + str(page))
             cost = time.time() - begin
             results = json.loads(str(reps.body, encoding="utf-8"))
             count = results["num_results"]
@@ -113,15 +117,31 @@ class QueryHandler(RequestHandler):
 
     @coroutine
     def get(self):
+        global result_cache
         q = self.get_argument("q")
         q = url_escape(q)
+        page = self.get_argument("page")
+        page = int(url_escape(page))
         begin = time.time()
-        results = yield self.__fetch_results(q)
-        results = results[:manifest.MAX_DOC_PER_QUERY]
+        if q in result_cache.keys():
+            result_list = result_cache[q]["results"]
+            length = result_cache[q]["num_results"]
+        else:
+            results = yield self.__fetch_results(q)
+            #results = results[:manifest.MAX_DOC_PER_QUERY]
+            length = len(results)
+            result_list = []
+            end = int(math.ceil(float(len(results)/10)))
+            for i in range(0, end):
+                result_list.append(results[i*10 : (i+1)*10])
+            result_cache[q] = {"results": result_list, "num_results": length}
         cost = time.time() - begin
         print("[MASTER] find results cost %.4fs." % cost)
 
-        self.write({"results": results, "num_results": len(results)})
+        if page >= len(result_list):
+            self.write({"results": [], "num_results": length, "num_pages": len(result_list)})
+        else:
+            self.write({"results": result_list[page], "num_results": length, "num_pages": len(result_list)})
 
 def make_master_app():
     global ht
