@@ -42,6 +42,7 @@ class DocsHandler(RequestHandler):
     def get(self):
         docids = self.get_argument("id")
         q = self.get_argument("q")
+        q = url_escape(q)
         docids = [int(x) for x in docids.split(",")]
 
         docs = yield self.__fetch_docs(docids, q)
@@ -56,6 +57,7 @@ class QueryHandler(RequestHandler):
         reps = yield [http_cli.fetch(req) for req in reqs]
         indexes = reduce(lambda x, y: x + json.loads(str(y.body, encoding="utf-8"))["postings"], reps, [])
         indexes.sort(key=lambda x: x[1], reverse=True)
+        indexes = [["%s_%d" % (manifest.DATA_ID, x[0],), x[1]] for x in indexes]
 
         return indexes
 

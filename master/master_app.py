@@ -112,7 +112,10 @@ class MainHandler(RequestHandler):
             results = json.loads(str(reps.body, encoding="utf-8"))
             count = results["num_results"]
 
-            self.render("result.html", cost=cost, count=count, results=results["results"], pages=range(0, results["num_pages"]), cur_page=page)
+            self.render("result.html", cost=cost,
+                        count=count,
+                        results=results["results"],
+                        pages=range(0, results["num_pages"]), cur_page=page, q=q)
 
 class QueryHandler(RequestHandler):
     @coroutine
