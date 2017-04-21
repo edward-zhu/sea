@@ -4,8 +4,8 @@
 # server settings
 import os
 
-N_INDEX_SRV = 4
-N_DOC_SRV = 4
+N_INDEX_SRV = 8
+N_DOC_SRV = 8
 
 BASE_PORT = int(os.environ.get("BASE_PORT", default="24000")) #need to be exported
 FRONT_PORT = int(os.environ.get("FRONT_PORT", default="22333")) #need to be exported

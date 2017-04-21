@@ -113,7 +113,12 @@ class Coordinator:
 def main(args):
     '''main func'''
     paths = [p.strip() for p in args.input_path.split(',')]
-    c = Coordinator(args.mapper_path, args.reducer_path, paths, args.output_path, args.num_reducers)
+    c = Coordinator(
+        args.mapper_path,
+        args.reducer_path,
+        paths,
+        args.output_path,
+        args.num_reducers)
     err = yield c.run()
     print(err)
     IOLoop.instance().stop()
