@@ -13,17 +13,15 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from search.utils.tokenizer import StemTokenizer, SimpleTokenizer
-import search.manifest as manifest
 
 class Scorer:
     def __init__(self, _tfidf, doc_reps, doc_invidx,
-                 nsrv, id2repid=None, tokenizer=StemTokenizer(), simple_tokenizer=SimpleTokenizer()):
+                 id2repid=None,
+                 tokenizer=StemTokenizer(), simple_tokenizer=SimpleTokenizer()):
         self.tfidf = _tfidf
         self.doc_reps = doc_reps
         self.doc_invidx = doc_invidx
-
         self.ndocs = doc_reps.shape[0]
-        self.nsrv = nsrv
         self.tokenizer = tokenizer
         self.simple_tokenizer = simple_tokenizer
         self.id2repid = id2repid
@@ -47,10 +45,7 @@ class Scorer:
         return list(docids)
 
     def _id2repid(self, ids):
-        if self.id2repid is None:
-            return [int(x / self.nsrv) for x in ids]
-        else:
-            return [self.id2repid[x] for x in ids]
+        return [self.id2repid[x] for x in ids]
 
     def _get_unbiased_scores(self, q_vec, docids):
         m_bonus = np.zeros([self.ndocs])
@@ -82,9 +77,8 @@ class Scorer:
 
         return sorted(scores, key=lambda x: x[1], reverse=True)
 
-def make_scorer(srvid):
-    tfidf = pickle.load(open(manifest.get_tfidf(), "rb"))
-    data = pickle.load(bz2.open(manifest.get_index_data(srvid), "rb"))
-    id2repid = None if 'id2repid' not in data else data["id2repid"]
-    return Scorer(tfidf, data["doc_rep"], data["doc_invidx"],
-                  manifest.N_INDEX_SRV, id2repid=id2repid)
+def make_scorer(tfidf_f, data_f):
+    tfidf = pickle.load(open(tfidf_f, "rb"))
+    data = pickle.load(bz2.open(data_f, "rb"))
+    id2repid = data["id2repid"]
+    return Scorer(tfidf, data["doc_rep"], data["doc_invidx"], id2repid=id2repid)

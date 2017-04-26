@@ -1,14 +1,22 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from tornado.httpclient import AsyncHTTPClient
-from tornado.ioloop import IOLoop,PeriodicCallback
-from multiprocessing import Process,Queue
-
 import re
 import socket
 import sys
+import time
+import logging
+import signal
 
+import etcd
+
+from multiprocessing import Process, SimpleQueue
+from threading import Thread
+
+from tornado.ioloop import IOLoop, PeriodicCallback
+
+
+from search.config import EtcdConfigFactory
 import search.manifest as manifest
 from search.frontend_app import make_frontend_app
 from search.index_app import make_index_app
@@ -18,100 +26,132 @@ from tornado.gen import coroutine, sleep
 HEARTBEAT_INT = 2000 # heartbeat timeout in msec.
 TRUNCATED_SEC = 30 # truncated to seconds
 
-#MASTER_TRACKER = "http://localhost:%d" % (manifest.MASTER_PORT, )
-MASTER_TRACKER = manifest.MASTER_TRACKER
-PeCALL = None
+HOST = socket.gethostname()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 
-def get_port(url):
-    return int(re.findall(r':([0-9]+)', url)[0])
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+logging.getLogger("etcd").setLevel(logging.WARNING)
 
-def get_internal_ip():
-    return socket.gethostbyname(socket.gethostname())
 
-HOST = "http://%s:%d" % (get_internal_ip(), get_port(manifest.FRONTEND), )
+class SearchEngine:
+    '''search engine class'''
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.etcd_cli = etcd.Client()
+        self.srvs = []
+        self.ready = False
+        self.timer = None
 
-@coroutine    
-def _send_req(req, retry=False):
-    http_cli = AsyncHTTPClient()
-    # truncated exponential backoff
-    delay = 1
-    while True:
+    def _srv_desc(self):
+        return self.cfg.srv_desc
+
+    def shutdown(self, signo, frame):
+        '''shutdown search engine'''
+        self.etcd_cli.delete("/misaki/srvs/%d" % (self.cfg.srvid, ))
+        self.etcd_cli.delete("/misaki/avail/%s" % self._srv_desc())
+        for srv in self.srvs:
+            srv.terminate()
+
+    def _heartbeat_impl(self):
         try:
-            ret = yield http_cli.fetch(MASTER_TRACKER + req)
-        except Exception as e:
-            if retry and delay < TRUNCATED_SEC:
-                print("send req failed: %s, retry after %d sec." % (str(e), delay,))
-                yield sleep(delay)
-                delay *= 2
-                continue
-            else:
-                print("send req failed.")
-                return False, ""
-        return True, ret
+            self.etcd_cli.write(
+                "/misaki/srvs/%d" % (self.cfg.srvid, ),
+                self._srv_desc(),
+                ttl=10,
+                prevValue=self._srv_desc())
+        except etcd.EtcdCompareFailed:
+            logger.warning("extend lease failed, shutdown...")
 
-@coroutine 
-def heartbeat():
-    ok, res = yield _send_req("/heartbeat?host=%s&srvid=%s" % (HOST, manifest.DATA_ID))
-    if not ok:
-        print('Warning: connect to master failed.')
+        if not self.ready:
+            return
 
+        self.etcd_cli.write(
+            "/misaki/avail/%s" % self._srv_desc(),
+            value=1,
+            ttl=10
+        )
 
-srvs = []
-count = 0
+    def _heartbeat(self):
+        while True:
+            self._heartbeat_impl()
+            time.sleep(0.5)
 
-host = socket.gethostname()
+    def _start_index_app(self, i, queue):
+        port = self.cfg.index_srv_port(i)
+        app = make_index_app(
+            self.cfg.get_tfidf(),
+            self.cfg.get_index_data(i),
+            self.cfg.max_q_doc
+        )
+        queue.put(i)
+        print("[INDEX SRV] #%d listening on %s:%d." % (i, HOST, port))
+        app.listen(port)
+        IOLoop.current().start()
 
-def start_index_app(i,queue):
-    port = get_port(manifest.INDEX_SRV[i])
-    app = make_index_app(i)
-    queue.put(i)
-    print("[INDEX SRV] #%d listening on %s:%d." % (i, host, port))
-    app.listen(port)
-    IOLoop.current().start()
+    def _start_doc_app(self, i, queue):
+        port = self.cfg.doc_srv_port(i)
+        app = make_doc_app(
+            self.cfg.get_doc_data(i),
+            self.cfg.get_tfidf(),
+            self.cfg.snippet_len
+        )
+        print("[DOC SRV] #%d listening on %s:%d." % (i, HOST, port))
+        queue.put(i + 10)
+        app.listen(port)
+        IOLoop.current().start()
 
-def start_doc_app(i,queue):
-    port = get_port(manifest.DOC_SRV[i])
-    app = make_doc_app(i)
-    print("[DOC SRV] #%d listening on %s:%d." % (i, host, port))
-    queue.put(i+10)
-    app.listen(port)
-    IOLoop.current().start()
+    def _start_frontend_app(self):
+        port = self.cfg.front_port
+        app = make_frontend_app(self.cfg)
+        print("[FRONT SRV] listening on port %s:%d." % (HOST, port))
+        app.listen(port)
+        IOLoop.current().start()
 
-def start_frontend_app(queue):
-    port = get_port(manifest.FRONTEND)
-    app = make_frontend_app()
-    print("[FRONT SRV] listening on port %s:%d." % (host, port))
-    app.listen(port)
+    def start(self):
+        queue = SimpleQueue()
 
-    count = 0
-    while count < len(manifest.INDEX_SRV)+len(manifest.DOC_SRV):
-        queue.get()
-        count += 1
-    PeriodicCallback(heartbeat, HEARTBEAT_INT).start()
-    IOLoop.current().start()
+        for i in range(0, self.cfg.n_index):
+            srv = Process(target=self._start_index_app, args=(i, queue,))
+            self.srvs.append(srv)
 
+        for i in range(0, self.cfg.n_doc):
+            srv = Process(target=self._start_doc_app, args=(i, queue,))
+            self.srvs.append(srv)
+
+        for srv in self.srvs:
+            srv.start()
+
+        self.timer = Thread(target=self._heartbeat)
+        self.timer.daemon = True
+        self.timer.start()
+
+        count = 0
+        while count < self.cfg.n_index + self.cfg.n_doc:
+            queue.get()
+            count += 1
+
+        self.ready = True
+
+        frontend_srv = Process(target=self._start_frontend_app)
+        frontend_srv.start()
+
+        self.srvs.append(frontend_srv)
+
+        signal.signal(signal.SIGQUIT, self.shutdown)
+        signal.signal(signal.SIGTSTP, self.shutdown)
+        signal.signal(signal.SIGTERM, self.shutdown)
+
+        try:
+            for srv in self.srvs:
+                srv.join()
+        finally:
+            print("program exit!")
+            return
 
 if __name__ == "__main__":
-    queue = Queue()
-
-    for i in range(0, manifest.N_INDEX_SRV):
-        srv = Process(target=start_index_app, args=(i, queue,))
-        srvs.append(srv)
-
-    for i in range(0, manifest.N_DOC_SRV):
-        srv = Process(target=start_doc_app, args=(i, queue,))
-        srvs.append(srv)
-
-    frontend_srv = Process(target=start_frontend_app, args=(queue, ))
-    srvs.append(frontend_srv)
-
-    for srv in srvs:
-        srv.start()
-
-    try:
-        for srv in srvs:
-            srv.join()
-    finally:
-        print("program exit!")
-        sys.exit(0)
+    fac = EtcdConfigFactory()
+    cfg = fac.get_cfg()
+    se = SearchEngine(cfg)
+    se.start()
 

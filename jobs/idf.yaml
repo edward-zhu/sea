@@ -1,15 +1,50 @@
-name : invindex
+name : idf
 tasks:
   - spec : mapreduce
     mapper_path : indexer/mr_apps/idf_mapper.py
     reducer_path : indexer/mr_apps/idf_reducer.py
-    input_path : "/data/jz2653/serval-data/invindex_out/0,\
-                  /data/jz2653/serval-data/invindex_out/1,\
-                  /data/jz2653/serval-data/invindex_out/2,\
-                  /data/jz2653/serval-data/invindex_out/3,\
-                  /data/jz2653/serval-data/invindex_out/4,\
-                  /data/jz2653/serval-data/invindex_out/5,\
-                  /data/jz2653/serval-data/invindex_out/6,\
-                  /data/jz2653/serval-data/invindex_out/7"
-    output_path : /data/jz2653/serval-data/idf_out
+    input_path : /data/jz2653/serval-data/invindex_out/0
+    output_path : /data/jz2653/serval-data/idf_out/0
+    num_reducers : 1
+  - spec : mapreduce
+    mapper_path : indexer/mr_apps/idf_mapper.py
+    reducer_path : indexer/mr_apps/idf_reducer.py
+    input_path : /data/jz2653/serval-data/invindex_out/1
+    output_path : /data/jz2653/serval-data/idf_out/1
+    num_reducers : 1
+  - spec : mapreduce
+    mapper_path : indexer/mr_apps/idf_mapper.py
+    reducer_path : indexer/mr_apps/idf_reducer.py
+    input_path : /data/jz2653/serval-data/invindex_out/2
+    output_path : /data/jz2653/serval-data/idf_out/2
+    num_reducers : 1
+  - spec : mapreduce
+    mapper_path : indexer/mr_apps/idf_mapper.py
+    reducer_path : indexer/mr_apps/idf_reducer.py
+    input_path : /data/jz2653/serval-data/invindex_out/3
+    output_path : /data/jz2653/serval-data/idf_out/3
+    num_reducers : 1
+  - spec : mapreduce
+    mapper_path : indexer/mr_apps/idf_mapper.py
+    reducer_path : indexer/mr_apps/idf_reducer.py
+    input_path : /data/jz2653/serval-data/invindex_out/4
+    output_path : /data/jz2653/serval-data/idf_out/4
+    num_reducers : 1
+  - spec : mapreduce
+    mapper_path : indexer/mr_apps/idf_mapper.py
+    reducer_path : indexer/mr_apps/idf_reducer.py
+    input_path : /data/jz2653/serval-data/invindex_out/5
+    output_path : /data/jz2653/serval-data/idf_out/5
+    num_reducers : 1
+  - spec : mapreduce
+    mapper_path : indexer/mr_apps/idf_mapper.py
+    reducer_path : indexer/mr_apps/idf_reducer.py
+    input_path : /data/jz2653/serval-data/invindex_out/6
+    output_path : /data/jz2653/serval-data/idf_out/6
+    num_reducers : 1
+  - spec : mapreduce
+    mapper_path : indexer/mr_apps/idf_mapper.py
+    reducer_path : indexer/mr_apps/idf_reducer.py
+    input_path : /data/jz2653/serval-data/invindex_out/7
+    output_path : /data/jz2653/serval-data/idf_out/7
     num_reducers : 1

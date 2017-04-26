@@ -4,56 +4,14 @@
 # server settings
 import os
 
-N_INDEX_SRV = 8
-N_DOC_SRV = 8
-
-BASE_PORT = int(os.environ.get("BASE_PORT", default="24000")) #need to be exported
-FRONT_PORT = int(os.environ.get("FRONT_PORT", default="22333")) #need to be exported
-MASTER_TRACKER = os.environ.get("MASTER_TRACKER", default="http://172.17.81.95:11111")
-FRONTEND = "http://localhost:%d/" % (FRONT_PORT, )
-
-MULTIPROCESS = False
-
-INDEX_SRV = []
-for i in range(0, N_INDEX_SRV):
-    temp = int(BASE_PORT)+i
-    INDEX_SRV.append("http://localhost:"+str(temp)+"/")
-
-DOC_SRV = []
-for i in range(0, N_DOC_SRV):
-    temp = int(BASE_PORT)+i+1000
-    DOC_SRV.append("http://localhost:"+str(temp)+"/")
+N_INDEX_SRV = 4
+N_DOC_SRV = 4
 
 # data settings
-DATA_FOLDER = os.environ.get("SEARCH_DATA_FOLDER", "data/") #need to be expoerted
-DATA_ID = os.environ.get("SEARCH_DATA_ID", "0") #need to be exported
-DATA_DIR = os.path.join(DATA_FOLDER, DATA_ID)
-INDEX_PREFIX = "indexes"
-DOC_PREFIX = "docs"
-TFIDF_FILE = "tfidf.pkl"
+DATA_BASE = os.environ.get("DATA_BASE", "data/") #need to be expoerted
 
 # query settings
-
 MAX_DOC_PER_QUERY = 100
 
 # snippeter settings
-
-# - snippet length in words
-SNIPPET_LEN = 40
-
-# util funcs
-
-import os
-
-def get_tfidf():
-    return os.path.join(DATA_DIR, TFIDF_FILE)
-
-def get_index_data(srvid):
-    if (srvid > N_INDEX_SRV):
-        raise (KeyError())
-    return os.path.join(DATA_DIR, INDEX_PREFIX + "_%d.pkl.bz2" % srvid)
-
-def get_doc_data(srvid):
-    if (srvid > N_DOC_SRV):
-        raise (KeyError())
-    return os.path.join(DATA_DIR, DOC_PREFIX + "_%d.pkl.bz2" % srvid)
+SNIPPET_LEN = 80

@@ -27,17 +27,11 @@ for k, g in groupby(data, itemgetter(0)):
         tf.setdefault(t, [])
         tf[t].append((int(k), count[t]))
 
-    '''
-    terms = sorted([x[1] for x in g])
-    for x, y in groupby(terms):
-        if x not in tf:
-            tf[x] = []
-        tf[x].append("%d:%d" % (int(k), len(list(y))))
-    '''
-
 for term in tf:
     tf[term].sort(key=itemgetter(1), reverse=True)
     df.append((term, len(tf[term]))) # append df
-    print("%s\t%s" % (term, ",".join(map(lambda x: "%d:%d" % (x[0], x[1]), tf[term][:MAX_INVINDEX_LEN]))))
+    print("%s\t%s" % (term, ",".join(map(lambda x: "%d:%d" % (x[0], x[1]),
+                                         tf[term][:MAX_INVINDEX_LEN]))))
 
+sorted(df, key=itemgetter(0))
 print("#DF\t%s" % json.dumps(df))

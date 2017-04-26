@@ -39,16 +39,17 @@ class QueryHandler(RequestHandler):
             "results" : self._gen_results(docids, q)
         })
 
-def make_doc_app(srvid):
-    docs = pickle.load(bz2.open(os.path.join(manifest.DATA_DIR, "docs_%d.pkl.bz2" % srvid), "rb"))
-    tfidf = pickle.load(open(os.path.join(manifest.DATA_DIR, "tfidf.pkl"), "rb"))
-    snippeter = Snippeter(tfidf, docs, srvid)
+def make_doc_app(doc_f, tfidf_f, snippet_len):
+    docs = pickle.load(bz2.open(doc_f, "rb"))
+    tfidf = pickle.load(open(tfidf_f, "rb"))
+    snippeter = Snippeter(tfidf, docs, snippet_len)
     app = Application([
         (r'/doc', QueryHandler, dict(docs=docs, snippeter=snippeter))
     ])
 
     return app
 
+'''
 import re
 
 def get_port(url):
@@ -60,3 +61,4 @@ if __name__ == "__main__":
     app = make_doc_app(srv_id)
     app.listen(get_port(manifest.DOC_SRV[srv_id]))
     IOLoop.current().start()
+'''

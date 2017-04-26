@@ -4,28 +4,27 @@
 from tornado.web import RequestHandler, Application
 from tornado.ioloop import IOLoop
 
-import search.manifest as manifest
 from search.scorer import make_scorer
 
 class QueryHandler(RequestHandler):
-    def initialize(self, scorer):
+    def initialize(self, scorer, max_q_doc):
         self.scorer = scorer
+        self.max_q_doc = max_q_doc
 
     def get(self):
         q = self.get_argument("q")
-        scores = self.scorer.scores(q)[:manifest.MAX_DOC_PER_QUERY]
+        scores = self.scorer.scores(q)[:self.max_q_doc]
         self.write({"postings": scores})
 
-def make_index_app(srvid):
-    print("[INDEX SRV] generating scorer for index srv #%d..." % srvid)
-    scorer = make_scorer(srvid)
-    print("[INDEX SRV] scorer generated for index srv #%d." % srvid)
+def make_index_app(tfidf_f, data_f, max_q_doc):
+    scorer = make_scorer(tfidf_f, data_f)
     app = Application([
-        (r'/index', QueryHandler, dict(scorer=scorer)),
+        (r'/index', QueryHandler, dict(scorer=scorer, max_q_doc=max_q_doc)),
     ])
 
     return app
 
+'''
 import re
 
 def get_port(url):
@@ -37,3 +36,4 @@ if __name__ == '__main__':
     app = make_index_app(srv_id)
     app.listen(get_port(manifest.INDEX_SRV[srv_id]))
     IOLoop.current().start()
+'''

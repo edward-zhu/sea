@@ -11,20 +11,19 @@ from functools import reduce
 
 from nltk.tokenize import RegexpTokenizer
 
-import search.manifest as manifest
 from search.utils.tokenizer import SimpleTokenizer, StemTokenizer, SideEffectTokenizer
 
 class Snippeter:
-    def __init__(self, tfidf, docs, srvid, simple_tokenize=SimpleTokenizer()):
+    def __init__(self, tfidf, docs, snippet_len, simple_tokenize=SimpleTokenizer()):
         self._tfidf = tfidf
         self._docs = docs
         self._vocabulary = tfidf.vocabulary_
         self._simple_tokenize = simple_tokenize
-        self._srvid = srvid
         self._rt = RegexpTokenizer(r'\s+', gaps=True)
         self._tt = tfidf.build_tokenizer()
         self._st = StemTokenizer()
         self._set = SideEffectTokenizer(True)
+        self.snippet_len = snippet_len
         self._sent_reps = {}
 
     def _get_sent_reps(self, docid):
@@ -43,20 +42,20 @@ class Snippeter:
         l = 0
         curid = sentid
         first_pos = 0
-        while l < manifest.SNIPPET_LEN and curid < len(sents):
+        while l < self.snippet_len and curid < len(sents):
             for t in self._rt.tokenize(sents[curid]):
                 if t in blur_q:
                     first_pos = l
                 expanded.append(t)
                 l = l + 1
             curid += 1
-        if len(expanded) > manifest.SNIPPET_LEN:
+        if len(expanded) > self.snippet_len:
             if curid > sentid + 1:
-                expanded = expanded[: manifest.SNIPPET_LEN]
+                expanded = expanded[: self.snippet_len]
             else:
                 left = first_pos
                 right = len(expanded) - first_pos
-                half = int(manifest.SNIPPET_LEN / 2)
+                half = int(self.snippet_len / 2)
                 if right < half:
                     expanded = expanded[len(expanded) - half * 2:]
                 elif left < half:
@@ -98,9 +97,10 @@ class Snippeter:
         return "".join(highlighted)
 
     def _highlight_trival(self, snippet, q):
-        pat = "(" + "|".join(q) + ")\w*"
+        pat = r"(" + r"|".join(q) + r")\w*"
 
-        highlighted = re.sub(pat, lambda x: "<strong>" + x.group(0) + "</strong>", snippet, flags=re.I)
+        highlighted = re.sub(pat, lambda x: "<strong>" + x.group(0) + "</strong>",
+                             snippet, flags=re.I)
 
         return highlighted
 
@@ -154,6 +154,7 @@ class Snippeter:
 
         return highlighted
 
+'''
 if __name__ == "__main__":
     import os
     import sys
@@ -163,3 +164,4 @@ if __name__ == "__main__":
 
     snippeter = Snippeter(tfidf, docs, srvid)
     print(snippeter.snippet(int(sys.argv[2]), sys.argv[3]))
+'''
