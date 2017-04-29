@@ -7,8 +7,9 @@ import sys
 import time
 import logging
 import signal
-
 import etcd
+
+from search.common import get_etcd_cli
 
 from multiprocessing import Process, SimpleQueue
 from threading import Thread
@@ -38,7 +39,7 @@ class SearchEngine:
     '''search engine class'''
     def __init__(self, cfg):
         self.cfg = cfg
-        self.etcd_cli = etcd.Client()
+        self.etcd_cli = get_etcd_cli()
         self.srvs = []
         self.ready = False
         self.timer = None
@@ -48,6 +49,7 @@ class SearchEngine:
 
     def shutdown(self, signo, frame):
         '''shutdown search engine'''
+        print("shutting down..")
         self.etcd_cli.delete("/misaki/srvs/%d" % (self.cfg.srvid, ))
         self.etcd_cli.delete("/misaki/avail/%s" % self._srv_desc())
         for srv in self.srvs:

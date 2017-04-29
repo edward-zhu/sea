@@ -28,7 +28,7 @@ stop = set(stopwords.words('english'))
 
 for line in sys.stdin:
     data = json.loads(line)
-    for token in filter(lambda x: x not in stop, tokenize(data["doc"])):
+    for token in filter(lambda x: x not in stop, tokenize(data["doc"].lower())):
     # for token in tokenize(data["doc"]):
         print('%s\t%s' % (data["metadata"]["doc_id"], token))
     count += 1

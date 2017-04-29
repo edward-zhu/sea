@@ -13,10 +13,9 @@ ADD start_host.sh /app/
 	
 RUN chmod +x /app/start_host.sh
 
-ENV PYTHONPATH="/app"
+ENV ETCD_CLUSTER="$HOSTIP:2379" \
+	DATA_BASE="/gcloud/test/"
 
 ADD . /app
 
-WORKDIR /app
-
-CMD python -m search.master
+CMD /app/start_host.sh

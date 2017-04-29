@@ -9,7 +9,7 @@ from tornado.web import RequestHandler, Application
 from tornado.httpclient import AsyncHTTPClient
 from tornado.gen import coroutine
 
-from mapreduce.utils import hashf
+from common import hashf
 
 class DocsHandler(RequestHandler):
     def initialize(self):

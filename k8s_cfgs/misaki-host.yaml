@@ -1,0 +1,27 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  # Unique key of the Deployment instance
+  name: misaki-host
+spec:
+  template:
+    metadata:
+      labels:
+        # Apply this label to pods and default
+        # the Deployment label selector to this value
+        app: misaki-host
+    spec:
+      containers:
+      - name: misaki-host
+        # Run this image
+        image: gcr.io/serval-cat/misaki-host
+        imagePullPolicy: Always
+        ports: 
+        - containerPort: 22333
+        securityContext:
+            privileged: true
+        env:
+        - name: ETCD_CLUSTER
+          value: "etcd-client:2379"
+      nodeSelector:
+        cloud.google.com/gke-nodepool: host-pool

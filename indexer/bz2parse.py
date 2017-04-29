@@ -9,6 +9,8 @@ import json
 
 from lxml import etree
 
+from indexer.WikiExtractor import Extractor
+
 class WikipediaParser:
     STANDBY = 0
     TITLE = 1
@@ -17,15 +19,19 @@ class WikipediaParser:
     WIKI_URL_PREFIX = "https://en.wikipedia.org/wiki/"
     WIKI_NAMESPACE = "{http://www.mediawiki.org/xml/export-0.10/}"
 
-    trim_re = re.compile(r"http.*?\s|<ref.*?/>|&lt;ref.*?ref&gt;|&lt;math.*?math&gt;|\\t|<code>.*?</code>|"+
-                         r"<ref.*?>.*?</ref>|{{.*?}}|{.*?}|--+|[!+<>*{}#\\/|=']|"+
-                         r"\[.*?\]|\]",
-                         flags=re.DOTALL|re.MULTILINE)
+    EXTRACTOR = Extractor(1, 1, "", "")
+
+    REF_EXP1 = re.compile(r"<ref.*?/>|==.*?==(=)?")
+    REF_EXP2 = re.compile(r"<ref.*?>.*?</ref>")
 
     @staticmethod
-    def preprocess(str):
+    def preprocess(text):
         '''preprocess string'''
-        return WikipediaParser.trim_re.sub("", str)
+        text = WikipediaParser.EXTRACTOR.transform(text)
+        text = WikipediaParser.EXTRACTOR.wiki2text(text)
+        text = WikipediaParser.REF_EXP1.sub("", text)
+        text = WikipediaParser.REF_EXP2.sub("", text)
+        return text
 
     def iterparse(self, fn):
         '''parse iteratively'''

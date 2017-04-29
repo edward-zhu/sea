@@ -30,7 +30,7 @@ class Snippeter:
         if docid in self._sent_reps:
             return self._sent_reps[docid]
 
-        reps = self._tfidf.transform(self._docs[docid]["sents"])
+        reps = self._tfidf.transform(self._docs[docid]["sents"][:50])
         self._sent_reps[docid] = reps
         return reps
 

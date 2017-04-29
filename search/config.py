@@ -10,6 +10,8 @@ import time
 import logging
 
 import etcd
+
+from search.common import get_etcd_cli
 from search import manifest
 
 LOG_FMT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -93,8 +95,8 @@ class Config:
 class EtcdConfigFactory:
     '''Generate config from etcd setting'''
     def __init__(self, front_port=22333):
-        self.cli = etcd.Client()
-        self.host = socket.gethostname()
+        self.cli = get_etcd_cli()
+        self.host = get_internal_ip()
         self.front_port = front_port
 
     def _get_until_exist(self, key):

@@ -76,7 +76,7 @@ def _split(q, n_parser, n_part, job_path, files, compress=False):
 
         try:
             doc = WikipediaParser.preprocess(doc)
-            doc = doc.replace("\n\n", "").lower()
+            doc = doc.replace("\n\n", "")
         except Exception as e:
             print('illegal doc. error:', e)
             continue
@@ -85,7 +85,7 @@ def _split(q, n_parser, n_part, job_path, files, compress=False):
         pid = md["doc_id"]% n_part
         text = json.dumps({
             "metadata" : md,
-            "doc" : doc.lower(),
+            "doc" : doc,
         }) + '\n'
 
         files[pid].write(text)
@@ -154,13 +154,13 @@ class Reformatter:
 
 
 URLS = [
-    "http://localhost:8000/enwiki_10.xml.bz2",
+    "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles1.xml-p10p30302.bz2",
 ]
 
 @coroutine
 def main():
     '''main func'''
-    r = Reformatter(URLS, "data/invindex_jobs", 4, 2, 0)
+    r = Reformatter(URLS, "data/invindex_jobs", 2, 3, 0)
     ok, err = yield r.run()
     print(ok)
     IOLoop.instance().stop()

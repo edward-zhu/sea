@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-
 import json
 import time
 import math
@@ -14,11 +13,13 @@ from tornado.web import RequestHandler, StaticFileHandler, Application
 from tornado.httpclient import AsyncHTTPClient
 from tornado.ioloop import IOLoop, PeriodicCallback
 from tornado.gen import coroutine
-from master import manifest
+
+from search import manifest
+from search.common import get_etcd_cli
 
 ht = None
 index_cache = {}
-#doc_cache = {}
+doc_cache = {}
 
 class HostTracker:
     HBT_DEADLINE = 1
@@ -26,10 +27,12 @@ class HostTracker:
     def __init__(self):
         self._hosts = {}  # initially no host is visible or available
         self._ioloop = None
-        self.etcd_cli = etcd.Client()
+        self.etcd_cli = get_etcd_cli()
 
     def _update_hosts(self):
+        global index_cache
         host_candidates = self.etcd_cli.read('/misaki/srvs').children
+        prev_ids = self._hosts.keys()
         self._hosts = {}
         for host in host_candidates:
             dataid = host.key.split("/")[-1]
@@ -39,6 +42,9 @@ class HostTracker:
                 self._hosts[dataid] = h
             except etcd.EtcdKeyNotFound:
                 pass
+        if prev_ids != self._hosts.keys():
+            index_cache = {}
+            doc_cache = {}
 
         self.show_hosts()
 
@@ -75,7 +81,8 @@ class MainHandler(RequestHandler):
             http_client = AsyncHTTPClient()
             begin = time.time()
             reps = yield http_client.fetch(
-                manifest.MASTER + "/search?q=" + url_escape(q) + "&page=" + str(page))
+                "http://localhost:" + manifest.MASTER_PORT +
+                "/search?q=" + url_escape(q) + "&page=" + str(page))
             cost = time.time() - begin
             results = json.loads(str(reps.body, encoding="utf-8"))
             count = results["num_results"]
@@ -102,19 +109,24 @@ class QueryHandler(RequestHandler):
 
     @coroutine
     def __fetch_docs(self, indexes, q):
+        global doc_cache
+
         http_client = AsyncHTTPClient()
         docids = {}
         for host in ht.hosts():
             docids[host] = []
+
+        cached = {}
         for ind in indexes:
             temp = ind[0].split('_')
             server_host = ht.find_host_with_dataid(temp[0])
             doc_id = temp[1]
             if server_host == -1:
-                print("No such server whose data id is %d" % ind[2])
+                print("No such server whose data id is %d" % temp[0])
             else:
                 docids[server_host].append(doc_id)
             #docids[hashf(str(ind[0])) % nsrv].append(str(ind[0]))
+
         reqs = [self.__get_doc_url(host, docids[host], q)
                 for host in ht.hosts() if len(docids[host]) > 0]
 
@@ -122,11 +134,7 @@ class QueryHandler(RequestHandler):
 
         results = reduce(lambda x, y: {**x, **json.loads(y.body)["results"]}, reps, {})
 
-        #docs = {}
-        #for r in results:
-        #    docs[r["doc_id"]] = r
-
-        return results
+        return {**cached, **results}
 
     '''
     @coroutine
@@ -145,6 +153,8 @@ class QueryHandler(RequestHandler):
     @coroutine
     def get(self):
         global index_cache
+        global doc_cache
+
         q = self.get_argument("q")
         q = url_escape(q)
         page = self.get_argument("page")
@@ -168,8 +178,14 @@ class QueryHandler(RequestHandler):
         if page >= len(index_list):
             self.write({"results": [], "num_results": length, "num_pages": len(index_list)})
         else:
-            docs = yield self.__fetch_docs(index_list[page], q)
-            docs = [dict(docs[x[0].split('_')[1]], score=x[1]) for x in index_list[page]]
+            sig = q + str(page)
+            if sig in doc_cache:
+                docs = doc_cache[sig]
+            else:
+                docs = yield self.__fetch_docs(index_list[page], q)
+                docs = [dict(docs[x[0].split('_')[1]], score=x[1]) for x in index_list[page]]
+                doc_cache[sig] = docs
+
             self.write({"results": docs, "num_results": length, "num_pages": len(index_list)})
 
 def make_master_app():
@@ -187,5 +203,5 @@ def make_master_app():
 if __name__ == '__main__':
     import tornado.ioloop
     app = make_master_app()
-    app.listen(11111)
+    app.listen(manifest.MASTER_PORT)
     tornado.ioloop.IOLoop.current().start()

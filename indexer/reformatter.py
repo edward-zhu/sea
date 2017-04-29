@@ -1,9 +1,11 @@
 from indexer.bz2parse import WikipediaParser
+from indexer.WikiExtractor import Extractor
 
 import argparse
 import pickle
 import os
 import json
+import re
 
 import bz2
 
@@ -37,6 +39,17 @@ if __name__ == "__main__":
         print("output file #%d:%s" % (i, fn))
         files.append(open(fn, "w"))
 
+    extractor = Extractor(1, 1, "", "")
+
+    ref_exp1 = re.compile(r"<ref.*?/>")
+    ref_exp2 = re.compile(r"<ref.*?>.*?</ref>")
+    
+    def extract(text):
+        text = extractor.transform(text)
+        text = extractor.wiki2text(text)
+        text = ref_exp1.sub("", text)
+        text = ref_exp2.sub("", text)
+        return text
 
     with bz2.open(input_file) as fd:
         docid = 0
@@ -46,7 +59,7 @@ if __name__ == "__main__":
                 pid = md["doc_id"] % args.num_partitions
                 text = json.dumps({
                     "metadata" : md,
-                    "doc" : WikipediaParser.preprocess(doc).replace("\n\n", "").lower(),
+                    "doc" : extract(doc),
                 }) + '\n'
             except Exception as e:
                 print(str(e))

@@ -5,3 +5,5 @@ data/*
 k8s_cfgs/*
 jobs/*
 *.pyc
+image_file/
+dockerfiles/
