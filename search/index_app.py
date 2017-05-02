@@ -17,7 +17,7 @@ class QueryHandler(RequestHandler):
         self.write({"postings": scores})
 
 def make_index_app(tfidf_f, data_f, max_q_doc):
-    scorer = make_scorer(tfidf_f, data_f)
+    scorer = make_scorer(tfidf_f, data_f, max_q_doc)
     app = Application([
         (r'/index', QueryHandler, dict(scorer=scorer, max_q_doc=max_q_doc)),
     ])
