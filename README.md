@@ -75,6 +75,13 @@ Here shows 2 groups case.
         "current": "None",
         "jobs": []
     }%
+    
+#### Modify Job Specs
+
+Modify all of the data path in `jobs/*-mini.yaml`
+
+    $ export DATAPATH="\/path\/to\/data"
+    $ find . -name "*-mini.yaml" -exec gsed -i 's/DATA_PATH/$DATAPATH/g' {} \;
 
 #### Create Job
 
