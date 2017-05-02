@@ -115,7 +115,7 @@ Integrate task
 
 Final result:
 
-    (venv) jz2653@linax2[jobs]$ tree     /data/jz2653/mini-serval/
+    (venv) jz2653@linax2[jobs]$ tree /data/jz2653/mini-serval/
     ├── 0
     │   ├── reformatted_0.in.bz2
     │   └── reformatted_1.in.bz2
