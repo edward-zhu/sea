@@ -3,12 +3,12 @@ tasks:
   - spec : mapreduce
     mapper_path : indexer/mr_apps/docs_mapper.py
     reducer_path : indexer/mr_apps/docs_reducer.py
-    input_path : /data/jz2653/mini-serval/0
-    output_path : /data/jz2653/mini-serval/docs_out/0
+    input_path : DATA_PATH/0
+    output_path : DATA_PATH/docs_out/0
     num_reducers : 2
   - spec : mapreduce
     mapper_path : indexer/mr_apps/docs_mapper.py
     reducer_path : indexer/mr_apps/docs_reducer.py
-    input_path : /data/jz2653/mini-serval/1
-    output_path : /data/jz2653/mini-serval/docs_out/1
+    input_path : DATA_PATH/1
+    output_path : DATA_PATH/docs_out/1
     num_reducers : 2

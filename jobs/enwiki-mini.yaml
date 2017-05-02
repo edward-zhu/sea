@@ -2,7 +2,7 @@ name : reformat
 tasks:
   - spec : reformat
     urls : https://dumps.wikimedia.org/enwiki/20170320/enwiki-20170320-pages-articles1.xml-p000000010p000030302.bz2
-    job_path : /data/jz2653/mini-serval/
+    job_path : DATA_PATH/
     n_part : 2
     n_group : 2
     start_gid : 0
