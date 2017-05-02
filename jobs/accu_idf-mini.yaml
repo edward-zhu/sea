@@ -1,0 +1,9 @@
+name : accu_idf
+tasks:
+  - spec : mapreduce
+    mapper_path : indexer/mr_apps/accu_idf_mapper.py
+    reducer_path : indexer/mr_apps/accu_idf_reducer.py
+    input_path : "/data/jz2653/mini-serval/idf_out/0,\
+                  /data/jz2653/mini-serval/idf_out/1"
+    output_path : /data/jz2653/mini-serval/idf_out
+    num_reducers : 1
