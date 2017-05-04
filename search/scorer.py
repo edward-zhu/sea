@@ -46,9 +46,9 @@ class Scorer:
         for token in tokens:
             if token in self.doc_invidx:
                 if len(docids) == 0:
-                    docids = set(self.doc_invidx[token][:self.max_q_doc])
+                    docids = set(self.doc_invidx[token])
                 else:
-                    docids = docids.intersection(self.doc_invidx[token][:self.max_q_doc])
+                    docids = docids.intersection(self.doc_invidx[token])
 
         return list(docids)[:self.max_q_doc]
 
@@ -79,9 +79,6 @@ class Scorer:
 
         # accurate search
         docids = self._get_docsid(q)
-
-        logger.debug("docids %d", len(docids))
-
 
         scores_acc = self._get_unbiased_scores(q_vec, docids)
 

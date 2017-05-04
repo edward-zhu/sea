@@ -91,7 +91,7 @@
             <div class="ui basic buttons">
               {% for page in pages %}
               <a href="/?q={{ q }}&page={{ page }}">
-                <div class="ui {% if page != cur_page %}basic{% end %} button">{{ page }}</div>
+                <div class="ui {% if page != cur_page %}basic{% else %}active{% end %} button">{{ page }}</div>
               </a>
               {% end %}
             </div>
