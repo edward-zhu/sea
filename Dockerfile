@@ -13,9 +13,6 @@ ADD start_host.sh /app/
 	
 RUN chmod +x /app/start_host.sh
 
-ENV ETCD_CLUSTER="$HOSTIP:2379" \
-	DATA_BASE="/gcloud/test/"
-
 ADD . /app
 
 CMD /app/start_host.sh

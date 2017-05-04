@@ -4,8 +4,8 @@
 # server settings
 import os
 
-N_INDEX_SRV = 8
-N_DOC_SRV = 8
+N_INDEX_SRV = int(os.environ.get("N_SHARD", "8"))
+N_DOC_SRV = int(os.environ.get("N_SHARD", "8"))
 
 # data settings
 DATA_BASE = os.environ.get("DATA_BASE", "data/") #need to be expoerted

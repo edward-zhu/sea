@@ -13,7 +13,7 @@ nltk==3.2.2
 numpy==1.12.1
 packaging==16.8
 psutil==5.2.2
-pycurl==7.43.0 --global-option="--with-nss"
+pycurl==7.43.0
 pylint==1.6.5
 pyparsing==2.2.0
 python-etcd==0.4.5

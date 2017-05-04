@@ -23,5 +23,9 @@ spec:
         env:
         - name: ETCD_CLUSTER
           value: "etcd-client:2379"
+        - name: DATA_BASE
+          value: "/gcloud/mini"
+        - name: N_SHARD
+          value: "2"
       nodeSelector:
         cloud.google.com/gke-nodepool: host-pool

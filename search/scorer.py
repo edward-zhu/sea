@@ -5,6 +5,7 @@ import os
 import pickle
 import time
 import bz2
+import logging
 
 from tornado.web import RequestHandler, Application
 from tornado.ioloop import IOLoop
@@ -13,6 +14,8 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from search.utils.tokenizer import StemTokenizer, SimpleTokenizer
+
+logger = logging.getLogger(__name__)
 
 class Scorer:
     def __init__(self, _tfidf, doc_reps, doc_invidx,
@@ -42,18 +45,32 @@ class Scorer:
         docids = set()
         for token in tokens:
             if token in self.doc_invidx:
-                docids = docids.union(self.doc_invidx[token][:20])
+                if len(docids) == 0:
+                    docids = set(self.doc_invidx[token][:self.max_q_doc])
+                else:
+                    docids = docids.intersection(self.doc_invidx[token][:self.max_q_doc])
 
-        return list(docids)
+        return list(docids)[:self.max_q_doc]
 
     def _id2repid(self, ids):
         return [self.id2repid[x] for x in ids]
 
     def _get_unbiased_scores(self, q_vec, docids):
         m_bonus = np.zeros([self.ndocs])
+        t = time.time()
         ids_in_rep = self._id2repid(docids)
+        logger.debug("map time %.4f", time.time() - t)
+
+        t = time.time()
         trimmed_rep = self.doc_reps[ids_in_rep].toarray()
-        m = trimmed_rep[:, 1:].dot(q_vec.T).reshape([trimmed_rep.shape[0]])
+
+        logger.debug("trim time %.4f", time.time() - t)
+        t = time.time()
+
+        q_vec = np.c_[0, q_vec]
+        m = trimmed_rep.dot(q_vec.T).reshape([trimmed_rep.shape[0]])
+
+        logger.debug("dot time %.4f", time.time() - t)
         return np.c_[trimmed_rep[:, 0], m]
 
     def scores(self, q):
@@ -62,23 +79,25 @@ class Scorer:
 
         # accurate search
         docids = self._get_docsid(q)
+
+        logger.debug("docids %d", len(docids))
+
+
         scores_acc = self._get_unbiased_scores(q_vec, docids)
+
         docids_blur = []
 
-        if len(docids) < self.max_q_doc:
-            # blur search
-            docids_blur = self._get_docsid(q, 'blur')
+        # blur search
+        docids_blur = self._get_docsid(q, 'blur')
 
-            # trim results in accurate search
-            docids_blur = list(set(docids_blur).difference(docids))
-            scores_blur = self._get_unbiased_scores(q_vec, docids_blur)
+        # trim results in accurate search
+        docids_blur = list(set(docids_blur).difference(docids))
+        scores_blur = self._get_unbiased_scores(q_vec, docids_blur)
 
-            # rescale socre in blur search
-            scores_blur = np.c_[scores_blur[:, 0], scores_blur[:, 1] * 0.2]
+        # rescale socre in blur search
+        scores_blur = np.c_[scores_blur[:, 0], scores_blur[:, 1] * 0.2]
 
-            scores = np.r_[scores_acc, scores_blur]
-        else:
-            scores = scores_acc
+        scores = np.r_[scores_acc, scores_blur]
 
         scores = [[int(x[0]), round(x[1], 2)] for x in scores]
 

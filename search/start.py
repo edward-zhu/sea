@@ -47,13 +47,16 @@ class SearchEngine:
     def _srv_desc(self):
         return self.cfg.srv_desc
 
-    def shutdown(self, signo, frame):
-        '''shutdown search engine'''
+    def _shutdown_impl(self):
         print("shutting down..")
         self.etcd_cli.delete("/misaki/srvs/%d" % (self.cfg.srvid, ))
         self.etcd_cli.delete("/misaki/avail/%s" % self._srv_desc())
         for srv in self.srvs:
             srv.terminate()
+
+    def shutdown(self, signo, frame):
+        '''shutdown search engine'''
+        self._shutdown_impl()
 
     def _heartbeat_impl(self):
         try:
@@ -63,16 +66,25 @@ class SearchEngine:
                 ttl=10,
                 prevValue=self._srv_desc())
         except etcd.EtcdCompareFailed:
-            logger.warning("extend lease failed, shutdown...")
+            logger.warning("extend lease failed, other has occupied this group, shutdown...")
+            self._shutdown_impl()
+            return
+        except etcd.EtcdException:
+            logger.warning("connection with etcd server failed.")
+            return
 
         if not self.ready:
             return
 
-        self.etcd_cli.write(
-            "/misaki/avail/%s" % self._srv_desc(),
-            value=1,
-            ttl=10
-        )
+        try:
+            self.etcd_cli.write(
+                "/misaki/avail/%s" % self._srv_desc(),
+                value=1,
+                ttl=10
+            )
+        except etcd.EtcdException:
+            logger.warning("connection with etcd server failed.")
+            return
 
     def _heartbeat(self):
         while True:

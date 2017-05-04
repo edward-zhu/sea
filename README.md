@@ -75,13 +75,6 @@ Here shows 2 groups case.
         "current": "None",
         "jobs": []
     }%
-    
-#### Modify Job Specs
-
-Modify all of the data path in `jobs/*-mini.yaml`
-
-    $ export DATAPATH="\/path\/to\/data"
-    $ find . -name "*-mini.yaml" -exec gsed -i 's/DATA_PATH/$DATAPATH/g' {} \;
 
 #### Create Job
 
@@ -122,7 +115,7 @@ Integrate task
 
 Final result:
 
-    (venv) jz2653@linax2[jobs]$ tree /data/jz2653/mini-serval/
+    (venv) jz2653@linax2[jobs]$ tree     /data/jz2653/mini-serval/
     ├── 0
     │   ├── reformatted_0.in.bz2
     │   └── reformatted_1.in.bz2
