@@ -10,7 +10,7 @@ lxml==3.7.3
 MarkupSafe==1.0
 mccabe==0.6.1
 nltk==3.2.2
-numpy==1.12.1
+numpy==1.22.0
 packaging==16.8
 psutil==5.2.2
 pycurl==7.43.0
